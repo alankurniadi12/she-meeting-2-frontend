@@ -2,7 +2,7 @@
 
 Frontend Vue.js + JavaScript untuk aplikasi internal SHE Meeting.
 
-Status: D0-05 selesai diuji lokal. Login, dashboard ringkas, daftar rapat dengan pencarian/filter/status/badge/pagination tersedia. Route /login, /dashboard dan /findings memakai Vue Router 4.6.4 yang kompatibel dengan Node 24.10 lokal; / mengarah ke dashboard. Tambah/detail/koreksi/progres temuan tersedia di /findings/new, /findings/:id dan /findings/:id/edit. Riwayat lengkap, grafik/tren dashboard, kelola akun, pembatalan/foto/PDF belum tersedia. Belum deployment.
+Status: D0-01 sampai D0-06 selesai diuji lokal. Login, dashboard ringkas, daftar rapat dengan pencarian/filter/status/badge/pagination tersedia. Route /login, /dashboard dan /findings memakai Vue Router 4.6.4 yang kompatibel dengan Node 24.10 lokal; / mengarah ke dashboard. Tambah/detail/koreksi/progres temuan tersedia di /findings/new, /findings/:id dan /findings/:id/edit. Grafik/tren dashboard, kelola akun, pembatalan/foto/PDF belum tersedia. Belum deployment.
 
 ## Menjalankan
 
@@ -26,11 +26,11 @@ Dashboard mengambil angka dari GET /api/v1/dashboard, bukan konstanta frontend. 
 
 Daftar /findings mengambil baris dan ringkasan dari satu GET /api/v1/findings. Pilih divisi/pencarian/status, buka Filter lanjutan & urutan untuk prioritas, divisi pelapor, dasar/rentang tanggal, pembatalan, sort dan baris per halaman; lalu Terapkan filter. Kartu menghitung seluruh hasil sebelum pagination, data batal terpisah. Perubahan filter mulai page 1, Reset juga menghapus draf belum diterapkan. Tambah temuan dan link Buka detail sekarang berfungsi. Detail menyediakan Koreksi informasi dan form progres; foto/PDF masih belum tersedia.
 
-D0-05: isi form tanpa target/foto bila belum ditentukan, simpan sebagai Diproses, lalu perbarui detail/progres/status. Tertunda wajib alasan; Selesai meminta pemahaman status untuk semua penanggung jawab, tanpa foto/approval. Koreksi dari Selesai ke aktif wajib alasan, kejadian berulang dibuat baru. Catatan terbaru dibatasi 10; riwayat lengkap menyusul D0-06.
+D0-05: isi form tanpa target/foto bila belum ditentukan, simpan sebagai Diproses, lalu perbarui detail/progres/status. Tertunda wajib alasan; Selesai meminta pemahaman status untuk semua penanggung jawab, tanpa foto/approval. Koreksi dari Selesai ke aktif wajib alasan, kejadian berulang dibuat baru. Riwayat progres dan audit before/after tersedia 10 item per halaman.
 
-Draft hanya memori tab per akun/resource, tidak localStorage. Konflik menjaga draft, menampilkan tautan data terbaru atau explicit discard+reload setelah peringatan. Network/5xx tidak pasti mengunci isian untuk retry mutationId/payload yang sama. Navigasi dicegah saat menyimpan; refresh/menutup tab dapat menghapus draft dan diberi peringatan. Setelah sukses, detail dibaca ulang dan draft dibersihkan. Notice sukses tidak berasal dari URL. Belum pemulihan tahan refresh/offline atau peninjauan/merge konflik lengkap.
+Draft hanya memori tab per akun/resource, tidak localStorage. Konflik menjaga draft, menampilkan nilai semula/draft/terbaru, lalu rebase manual atau buang draft secara eksplisit. Network/5xx tidak pasti mengunci isian untuk retry mutationId/payload yang sama. Navigasi dicegah saat menyimpan; refresh/menutup tab dapat menghapus draft dan diberi peringatan. Setelah sukses, detail dibaca ulang dan draft dibersihkan. Notice sukses tidak berasal dari URL. Belum pemulihan tahan refresh/offline atau merge otomatis perubahan pada field yang sama.
 
-Validasi D0-05: 5 tes frontend (URL/tujuan login, cache draft/retry dan notice), build, serta 62 tes backend MongoDB nyata lulus. Browser membuat temuan tanpa target/foto, koreksi, tunda/lanjut/Selesai, refresh, konflik dua tab tanpa hilang teks draft, native validasi alasan dan form/detail HP 390px serta desktop 1440px diperiksa. Daftar terfilter membaca hasil baru. M-04/D0-06 serta MVP lain belum seluruhnya selesai.
+Validasi D0-05: 5 tes frontend (URL/tujuan login, cache draft/retry dan notice), build, serta 62 tes backend MongoDB nyata lulus. Browser membuat temuan tanpa target/foto, koreksi, tunda/lanjut/Selesai, refresh, konflik dua tab tanpa hilang teks draft, native validasi alasan dan form/detail HP 390px serta desktop 1440px diperiksa. Daftar terfilter membaca hasil baru. M-04 serta bagian MVP lain belum seluruhnya selesai.
 
 Output dist/ diabaikan Git. Vercel nantinya memakai root repo ini, npm run build dan dist; konfigurasi hosting belum diterapkan.
 
@@ -46,3 +46,5 @@ Kedua branch berawal dari fondasi yang sama; bekerja lokal pada dev. Push tidak 
 Sumber tunggal PRD, konteks, API, UI, backlog dan hasil pengembangan berada di [repo backend, folder docs](https://github.com/alankurniadi12/she-meeting-2-backend/tree/dev/docs). Setiap perubahan frontend yang memengaruhi spesifikasi harus menyelaraskan dokumen tersebut. Backend: https://github.com/alankurniadi12/she-meeting-2-backend.
 
 Jangan commit .env, kredensial, node_modules, dist, database atau unggahan lokal.
+
+D0-06: 6 tes frontend dan build lulus; endpoint riwayat diuji pada 63 tes backend dengan MongoDB test. Alur browser D0-06 dan perangkat kantor belum diverifikasi.

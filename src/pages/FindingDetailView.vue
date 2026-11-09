@@ -5,6 +5,8 @@ import { api } from '../services/api.js';
 import { fieldLabels } from '../services/field-labels.js';
 import { findingReturnPath } from '../services/query.js';
 import { getDraft, forgetDraft, pendingMutation, failedMutation, takeSavedNotice } from '../services/drafts.js';
+import FindingHistory from '../components/FindingHistory.vue';
+import { rebaseFields } from '../services/conflict.js';
 const props = defineProps({ account: Object });
 const emit = defineEmits(['session-ended']);
 const route = useRoute(); const row = ref(null); const loading = ref(true); const saving = ref(false);
@@ -20,6 +22,22 @@ const locked = computed(() => saving.value || conflict.value || state.value.unce
 const timestamp = (value) => value ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short', timeZone: row.value?.timeZone || 'Asia/Jakarta' }).format(new Date(value)) : '—';
 const date = (value) => value ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(`${value}T12:00:00Z`)) : 'Belum ditentukan';
 const actor = (value) => value?.source === 'DEMO_SEED' ? 'Seed data demo' : value?.displayName ? `Akun ${value.displayName}` : 'Akun tidak tersedia';
+const conflictFields = computed(() => {
+  if (!conflict.value || !row.value || !state.value.form) return [];
+  const original = JSON.parse(state.value.initial || '{}');
+  const latest = { status: row.value.status, holdReason: row.value.holdReason || '', priority: row.value.priority || '', targetDate: row.value.targetDate || '' };
+  return Object.keys(latest).filter((key) => JSON.stringify(original[key]) !== JSON.stringify(latest[key]) || JSON.stringify(original[key]) !== JSON.stringify(state.value.form[key]))
+    .map((key) => ({ key, label: { status: 'Status', holdReason: 'Alasan tertunda', priority: 'Prioritas', targetDate: 'Target' }[key], before: original[key] || 'Kosong', draft: state.value.form[key] || 'Kosong', latest: latest[key] || 'Kosong' }));
+});
+async function reviewConflict() { await load(); }
+function rebaseDraft() {
+  if (!row.value || row.value.version <= state.value.version || state.value.uncertain) return;
+  const latest = { status: row.value.status, holdReason: row.value.holdReason || '', priority: row.value.priority || '', targetDate: row.value.targetDate || '' };
+  state.value.form = rebaseFields(state.value.form, state.value.initial, latest);
+  state.value.version = row.value.version; state.value.baseStatus = row.value.status;
+  state.value.initial = JSON.stringify({ text: '', ...latest, correctionReason: '', confirmComplete: false });
+  state.value.pending = null; conflict.value = false; error.value = '';
+}
 async function load() {
   loading.value = true; error.value = '';
   try {
@@ -51,7 +69,7 @@ async function save() {
   } catch (failure) {
     failedMutation(state.value, failure);
     if (failure.status === 401) emit('session-ended');
-    else { error.value = failure.message; fields.value = failure.fields || {}; conflict.value = failure.code === 'VERSION_CONFLICT'; }
+    else { error.value = failure.message; fields.value = failure.fields || {}; conflict.value = failure.code === 'VERSION_CONFLICT'; if (conflict.value) await reviewConflict(); }
   } finally { saving.value = false; }
 }
 function unload(event) { if (dirty.value || state.value.uncertain || saving.value) { event.preventDefault(); event.returnValue = ''; } }
@@ -71,8 +89,8 @@ onUnmounted(() => window.removeEventListener('beforeunload', unload));
         <p v-if="row.status === 'ON_HOLD'" class="hold-note"><strong>Alasan tertunda:</strong> {{ row.holdReason }}</p><p v-if="row.cancelledAt" class="connection-alert">Dibatalkan: {{ row.cancellationReason }}. Data hanya dapat dibaca.</p>
         <p class="filter-help">{{ row.attachmentCount ? `${row.attachmentCount} metadata foto tercatat; akses foto belum tersedia.` : 'Tanpa foto. Foto tidak wajib untuk pencatatan atau status Selesai.' }}</p>
       </section>
-      <div class="detail-columns"><section class="panel detail-progress-list"><h2>Catatan progres terakhir</h2><p v-if="!row.progressEntries.length" class="heading-description">Belum ada catatan progres.</p><ol v-else class="progress-entries"><li v-for="entry in row.progressEntries" :key="entry.id"><p>{{ entry.text }}</p><small>{{ actor(entry.actor) }} · {{ timestamp(entry.timestamp) }}</small></li></ol><p class="filter-help">Menampilkan paling banyak 10 catatan terbaru dari {{ row.progressTotal }}. Riwayat perubahan lengkap menyusul pada tahap berikutnya.</p></section>
-      <section class="panel detail-progress-form"><h2>Perbarui progres</h2><div v-if="conflict" class="connection-alert" role="alert">Ada perubahan dari akun lain. Draf dipertahankan, simpan ulang dihentikan. <RouterLink class="text-button" :to="{ name: 'finding-detail', params: { id: row.id } }" target="_blank">Lihat versi terbaru di tab lain</RouterLink> sebelum membuat pembaruan baru.<p v-if="state.form?.text" class="conflict-draft">Draf catatan: {{ state.form.text }}</p><button class="text-button" @click="discardAndReload">Buang draf dan muat versi terbaru</button></div><div v-if="state.uncertain" class="connection-alert" role="alert">Hasil simpan belum dapat dipastikan. Coba simpan kembali; request yang sama tidak akan menggandakan catatan.</div>
+      <div class="detail-columns"><FindingHistory :id="row.id" :time-zone="row.timeZone" />
+      <section class="panel detail-progress-form"><h2>Perbarui progres</h2><div v-if="conflict" class="connection-alert" role="alert">Data berubah pada server. Tinjau perbedaan sebelum memakai versi terbaru.<p>Dasar draf: versi {{ state.version }} · terbaru: versi {{ row.version }}</p><div v-for="item in conflictFields" :key="item.key" class="conflict-comparison"><strong>{{ item.label }}</strong><span>Semula: {{ item.before }}</span><span>Draf: {{ item.draft }}</span><span>Terbaru: {{ item.latest }}</span></div><p v-if="state.form?.text" class="conflict-draft">Draf catatan: {{ state.form.text }}</p><button type="button" class="text-button" :disabled="row.version <= state.version" @click="rebaseDraft">Gunakan versi terbaru, pertahankan perubahan draf</button><button type="button" class="text-button" @click="discardAndReload">Buang draf dan muat ulang</button></div><div v-if="state.uncertain" class="connection-alert" role="alert">Hasil simpan belum dapat dipastikan. Coba simpan kembali; request yang sama tidak akan menggandakan catatan.</div>
         <form v-if="!row.cancelledAt && state.form" @submit.prevent="save"><fieldset :disabled="locked"><div class="filter-field"><label for="progress-text">Catatan progres (opsional bila ada perubahan status/target/prioritas)</label><textarea id="progress-text" v-model="state.form.text" maxlength="2000" rows="4"></textarea></div><div class="edit-grid"><div class="filter-field"><label for="progress-status">Status pekerjaan</label><select id="progress-status" v-model="state.form.status"><option value="IN_PROGRESS">Diproses</option><option value="ON_HOLD">Tertunda</option><option value="COMPLETED">Selesai</option></select></div><div class="filter-field"><label for="progress-priority">Prioritas</label><select id="progress-priority" v-model="state.form.priority"><option value="">Belum dinilai</option><option value="LOW">Rendah</option><option value="MEDIUM">Sedang</option><option value="HIGH">Tinggi</option></select></div><div class="filter-field full-field"><label for="progress-target">Target penyelesaian (opsional)</label><input id="progress-target" v-model="state.form.targetDate" type="date" :min="row.reportedDate" max="9999-12-31" /></div></div>
         <div v-if="state.form.status === 'ON_HOLD'" class="filter-field"><label for="hold-reason">Alasan tertunda *</label><textarea id="hold-reason" v-model="state.form.holdReason" required maxlength="2000" rows="3"></textarea></div>
         <div v-if="state.baseStatus === 'COMPLETED' && state.form.status !== 'COMPLETED'" class="filter-field"><label for="correction-reason">Alasan koreksi status selesai *</label><textarea id="correction-reason" v-model="state.form.correctionReason" required maxlength="2000" rows="3"></textarea><p class="filter-help">Hanya untuk salah input. Bila masalah muncul kembali, buat temuan baru.</p></div>

@@ -5,6 +5,7 @@ import { api } from '../services/api.js';
 import { fieldLabels } from '../services/field-labels.js';
 import { findingReturnPath } from '../services/query.js';
 import { getDraft, forgetDraft, pendingMutation, failedMutation, savedNotice } from '../services/drafts.js';
+import { rebaseFields } from '../services/conflict.js';
 const props = defineProps({ account: Object, divisions: { type: Array, default: () => [] }, divisionsError: String });
 const emit = defineEmits(['session-ended', 'reload-divisions']);
 const route = useRoute(); const router = useRouter();
@@ -20,6 +21,20 @@ const locked = computed(() => saving.value || state.value.uncertain || latest.va
 const activeDivisions = computed(() => props.divisions.filter((division) => division.active || state.value.form?.responsibleDivisionIds.includes(division.id) || state.value.form?.reporterDivisionId === division.id));
 function core(row) { return { reportedDate: row.reportedDate, description: row.description, location: row.location, reporterName: row.reporterName,
   reporterDivisionId: row.reporterDivisionId, responsibleDivisionIds: [...row.responsibleDivisionIds], priority: row.priority || '', targetDate: row.targetDate || '' }; }
+const compare = (value, field) => field === 'responsibleDivisionIds' ? (value || []).map((id) => props.divisions.find((item) => item.id === id)?.name || id).join(', ') || 'Kosong' : field === 'reporterDivisionId' ? props.divisions.find((item) => item.id === value)?.name || value || 'Kosong' : value || 'Kosong';
+const conflictFields = computed(() => {
+  if (!conflict.value || !latest.value || !state.value.form) return [];
+  const original = JSON.parse(state.value.initial || '{}'); const current = core(latest.value);
+  return Object.keys(current).filter((field) => JSON.stringify(original[field]) !== JSON.stringify(current[field]) || JSON.stringify(original[field]) !== JSON.stringify(state.value.form[field]))
+    .map((field) => ({ field, label: fieldLabels[field] || field, before: compare(original[field], field), draft: compare(state.value.form[field], field), latest: compare(current[field], field) }));
+});
+function rebaseDraft() {
+  if (!latest.value || latest.value.version <= state.value.version || state.value.uncertain) return;
+  const current = core(latest.value);
+  state.value.form = rebaseFields(state.value.form, state.value.initial, current);
+  state.value.version = latest.value.version; state.value.initial = JSON.stringify(current);
+  state.value.pending = null; conflict.value = false; error.value = '';
+}
 async function boot() {
   loading.value = true; error.value = '';
   try {
@@ -52,7 +67,7 @@ async function save() {
   } catch (failure) {
     failedMutation(state.value, failure);
     if (failure.status === 401) emit('session-ended');
-    else { error.value = failure.message; fields.value = failure.fields || {}; conflict.value = failure.code === 'VERSION_CONFLICT'; }
+    else { error.value = failure.message; fields.value = failure.fields || {}; conflict.value = failure.code === 'VERSION_CONFLICT'; if (conflict.value) await boot(); }
   } finally { saving.value = false; }
 }
 function unload(event) { if ((dirty.value || state.value.uncertain || saving.value) && !saved.value) { event.preventDefault(); event.returnValue = ''; } }
@@ -65,7 +80,7 @@ onUnmounted(() => { window.removeEventListener('beforeunload', unload); });
     <section v-if="loading" class="panel dashboard-state" role="status">Memuat formulir…</section>
     <template v-else>
       <div v-if="error" class="connection-alert" role="alert">{{ error }}<ul v-if="Object.keys(fields).length"><li v-for="(message, field) in fields" :key="field"><strong>{{ fieldLabels[field] || 'Isian' }}:</strong> {{ message }}</li></ul><button v-if="!state.form" class="text-button" @click="boot">Coba muat formulir</button></div>
-      <div v-if="conflict" class="connection-alert" role="alert">Data sudah berubah. Draf Anda dipertahankan dan penyimpanan dihentikan. <RouterLink class="text-button" :to="{ name: 'finding-detail', params: { id: route.params.id } }" target="_blank">Lihat versi terbaru di tab lain</RouterLink>. Salin isian yang masih dibutuhkan sebelum membuang draf. <button class="text-button" @click="discardAndReload">Buang draf dan muat versi terbaru</button></div>
+      <div v-if="conflict" class="connection-alert" role="alert">Data berubah pada server. Tinjau perbedaan sebelum menyimpan lagi.<p>Dasar draf: versi {{ state.version }} · terbaru: versi {{ latest?.version }}</p><div v-for="item in conflictFields" :key="item.field" class="conflict-comparison"><strong>{{ item.label }}</strong><span>Semula: {{ item.before }}</span><span>Draf: {{ item.draft }}</span><span>Terbaru: {{ item.latest }}</span></div><button type="button" class="text-button" :disabled="latest?.version <= state.version" @click="rebaseDraft">Gunakan versi terbaru, pertahankan perubahan draf</button><button type="button" class="text-button" @click="discardAndReload">Buang draf dan muat ulang</button></div>
       <div v-if="state.uncertain" class="connection-alert" role="alert">Hasil penyimpanan belum dapat dipastikan. Isian dikunci sementara; coba simpan kembali dengan isian yang sama agar tidak menggandakan temuan.</div>
       <div v-if="latest?.cancelledAt" class="connection-alert">Temuan dibatalkan. Koreksi tidak tersedia.</div>
       <div v-if="divisionsError" class="connection-alert" role="alert">{{ divisionsError }} <button class="text-button" @click="emit('reload-divisions')">Muat ulang divisi</button></div>
