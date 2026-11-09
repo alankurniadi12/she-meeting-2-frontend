@@ -1,0 +1,1 @@
+<template><section class="panel dashboard-state"><h2>Halaman belum tersedia</h2><p>Gunakan navigasi untuk membuka dashboard atau daftar temuan.</p><RouterLink class="text-button" to="/dashboard">Kembali ke dashboard</RouterLink></section></template>

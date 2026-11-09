@@ -1,12 +1,13 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { api, setCsrfToken } from './services/api.js';
-import DashboardView from './components/DashboardView.vue';
+import { useRoute, useRouter } from 'vue-router';
+import { loginDestination } from './services/query.js';
+const route = useRoute();
+const router = useRouter();
 
 const account = ref(null);
 const divisions = ref([]);
-const username = ref('');
-const password = ref('');
 const checking = ref(true);
 const busy = ref(false);
 const message = ref('');
@@ -60,15 +61,15 @@ async function restoreSession() {
     else message.value = error.message;
   } finally { checking.value = false; checkingSession = false; }
 }
-async function login() {
+async function login(credentials) {
   sessionEpoch++;
   busy.value = true;
   message.value = '';
   try {
-    acceptSession((await api('/auth/login', { method: 'POST', body: { username: username.value, password: password.value } })).data);
+    acceptSession((await api('/auth/login', { method: 'POST', body: credentials })).data);
     await loadDivisions();
   } catch (error) { message.value = error.message; }
-  finally { password.value = ''; busy.value = false; }
+  finally { busy.value = false; }
 }
 async function logout() {
   busy.value = true;
@@ -79,6 +80,17 @@ async function logout() {
     else message.value = error.message;
   } finally { busy.value = false; }
 }
+const pageTitle = computed(() => !account.value ? 'Masuk ke ruang kerja.' : route.name === 'findings' ? 'Daftar temuan' : route.name === 'dashboard' ? 'Dashboard temuan' : 'Halaman belum tersedia');
+const pageDescription = computed(() => !account.value ? 'Pencatatan dan tindak lanjut kondisi tidak aman untuk rapat lintas divisi.' : route.name === 'findings' ? 'Bahan pembahasan rapat, dengan pencarian dan status tindak lanjut terkini.' : `Selamat datang, ${account.value.displayName}. Pantau posisi temuan dan fokus tindak lanjut rapat.`);
+watch([() => route.fullPath, checking, account], () => {
+  if (checking.value) return;
+  if (!account.value && route.meta.requiresAuth) void router.replace({ name: 'login', query: { redirect: route.fullPath } });
+  else if (account.value && route.name === 'login') void router.replace(loginDestination(route.query.redirect));
+});
+watch(() => route.name, (name) => {
+  menuOpen.value = false;
+  document.title = `SHE Meeting · ${{ login: 'Login', dashboard: 'Dashboard', findings: 'Daftar temuan' }[name] || 'Halaman tidak ditemukan'}`;
+}, { immediate: true });
 function onFocus() { if (account.value) void restoreSession(); }
 onMounted(() => { void restoreSession(); window.addEventListener('focus', onFocus); });
 onUnmounted(() => { clearTimeout(expiryTimer); window.removeEventListener('focus', onFocus); });
@@ -88,34 +100,27 @@ onUnmounted(() => { clearTimeout(expiryTimer); window.removeEventListener('focus
   <div class="app-shell">
     <button v-if="menuOpen" class="scrim" aria-label="Tutup navigasi" @click="menuOpen = false"></button>
     <aside class="sidebar" :class="{ open: menuOpen }" aria-label="Navigasi utama">
-      <a class="brand" href="/" aria-label="SHE Meeting, beranda"><span class="brand-symbol">S<span>+</span></span><span>SHE<span class="brand-subtitle">MEETING</span></span></a>
+      <RouterLink class="brand" to="/dashboard" aria-label="SHE Meeting, beranda"><span class="brand-symbol">S<span>+</span></span><span>SHE<span class="brand-subtitle">MEETING</span></span></RouterLink>
       <div class="sidebar-caption">RUANG KERJA</div>
-      <a class="nav-link active" href="/" aria-current="page"><span class="nav-icon">▦</span> {{ account ? 'Dashboard' : 'Masuk' }} <span class="nav-indicator"></span></a>
+      <template v-if="account">
+        <RouterLink class="nav-link" active-class="active" to="/dashboard"><span class="nav-icon">▦</span> Dashboard</RouterLink>
+        <RouterLink class="nav-link" active-class="active" to="/findings"><span class="nav-icon">≡</span> Daftar temuan</RouterLink>
+      </template>
+      <RouterLink v-else class="nav-link" active-class="active" to="/login"><span class="nav-icon">▦</span> Masuk</RouterLink>
       <div class="sidebar-caption next-label">TAHAP BERIKUTNYA</div>
-      <div class="planned-nav">Daftar temuan <span class="soon">Nanti</span></div>
       <div class="planned-nav">Kelola akun <span class="soon">Nanti</span></div>
       <div class="sidebar-bottom"><span class="little-mark">SHE</span><div><strong>Demo · data dummy</strong><p>Belum untuk data operasional.</p></div></div>
     </aside>
     <div class="workspace">
       <header class="topbar">
-        <div class="header-left"><button class="menu-button" aria-label="Buka navigasi" :aria-expanded="menuOpen" @click="menuOpen = !menuOpen">☰</button><a href="/">Home</a><span class="breadcrumb-slash">/</span><span>{{ account ? 'Dashboard' : 'Masuk' }}</span></div>
+        <div class="header-left"><button class="menu-button" aria-label="Buka navigasi" :aria-expanded="menuOpen" @click="menuOpen = !menuOpen">☰</button><RouterLink to="/dashboard">Home</RouterLink><span class="breadcrumb-slash">/</span><span>{{ account ? (route.name === 'findings' ? 'Daftar temuan' : 'Dashboard') : 'Masuk' }}</span></div>
         <div class="header-right"><span class="environment-tag">DEMO DUMMY</span><div class="account-state"><span class="avatar">{{ account?.displayName?.slice(0, 1) || 'S' }}</span><div><strong>{{ account?.displayName || 'Belum login' }}</strong><small>{{ account ? (account.role === 'ADMIN' ? 'Administrator' : 'Akun bersama divisi') : 'Akses internal' }}</small></div></div><button v-if="account" class="logout-button" :disabled="busy" @click="logout">{{ busy ? 'Memproses…' : 'Keluar' }}</button></div>
       </header>
       <main>
-        <div class="page-heading"><div><p class="eyebrow">SHE MEETING / {{ account ? 'RINGKASAN' : 'AKSES INTERNAL' }}</p><h1>{{ account ? 'Dashboard temuan' : 'Masuk ke ruang kerja.' }}</h1><p class="heading-description">{{ account ? `Selamat datang, ${account.displayName}. Pantau posisi temuan dan fokus tindak lanjut rapat.` : 'Pencatatan dan tindak lanjut kondisi tidak aman untuk rapat lintas divisi.' }}</p></div><span class="stage-badge"><span></span> Tahap 03 — Dashboard</span></div>
+        <div class="page-heading"><div><p class="eyebrow">SHE MEETING / {{ account ? 'RINGKASAN' : 'AKSES INTERNAL' }}</p><h1>{{ pageTitle }}</h1><p class="heading-description">{{ pageDescription }}</p></div><span class="stage-badge"><span></span> Tahap 04 — Daftar rapat</span></div>
         <p v-if="message" class="connection-alert" role="alert">{{ message }}</p>
-        <section v-if="checking" class="roadmap-panel" role="status">Memeriksa sesi akun…</section>
-        <section v-else-if="!account" class="intro-panel login-panel" aria-labelledby="login-title">
-          <div class="intro-copy"><div class="panel-kicker"><span class="kicker-line"></span> SATU AKUN BERSAMA PER DIVISI</div><h2 id="login-title">Mulai dari<br />akun divisi Anda.</h2><p>Gunakan akun yang disediakan Admin ICT. Riwayat perubahan nantinya menunjukkan akun divisi yang digunakan.</p><div class="intro-note"><span>DEMO</span> Gunakan kredensial dummy lokal.</div></div>
-          <form class="login-form" @submit.prevent="login">
-            <h3>Login SHE Meeting</h3>
-            <label for="username">Username</label><input id="username" v-model="username" name="username" autocomplete="username" autocapitalize="none" :spellcheck="false" required minlength="3" maxlength="64" :disabled="busy" />
-            <label for="password">Kata sandi</label><input id="password" v-model="password" name="password" type="password" autocomplete="current-password" required maxlength="128" :disabled="busy" />
-            <button class="primary-button" type="submit" :disabled="busy">{{ busy ? 'Memproses…' : 'Masuk' }}</button>
-            <p>Belum punya akses atau lupa kata sandi? Hubungi Admin ICT.</p>
-          </form>
-        </section>
-        <DashboardView v-else :divisions="divisions" :divisions-error="loadError" @reload-divisions="loadDivisions" @session-ended="clearSession('Sesi sudah berakhir. Silakan login kembali.')" />
+        <section v-if="checking || (!account && route.meta.requiresAuth)" class="roadmap-panel" role="status">Memeriksa sesi akun…</section>
+        <RouterView v-else v-slot="{ Component }"><component :is="Component" :key="route.name" :busy="busy" :divisions="divisions" :divisions-error="loadError" @login="login" @reload-divisions="loadDivisions" @session-ended="clearSession('Sesi sudah berakhir. Silakan login kembali.')" /></RouterView>
         <footer class="page-footer"><span>SHE Meeting · Demo internal dengan data dummy</span><span>Belum untuk operasional</span></footer>
       </main>
     </div>

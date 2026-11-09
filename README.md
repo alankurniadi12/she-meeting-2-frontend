@@ -2,7 +2,7 @@
 
 Frontend Vue.js + JavaScript untuk aplikasi internal SHE Meeting.
 
-Status: D0-03 selesai diuji lokal. Route / menampilkan login atau dashboard ringkas setelah login: empat kartu status, terbuka/terlambat, indikator bulanan, filter divisi/bulan, reset/refresh dan timestamp backend. Daftar/mutasi temuan, grafik/tren dashboard lengkap, kelola akun dan PDF belum tersedia. Belum deployment.
+Status: D0-04 selesai diuji lokal. Login, dashboard ringkas, daftar rapat dengan pencarian/filter/status/badge/pagination tersedia. Route /login, /dashboard dan /findings memakai Vue Router 4.6.4 yang kompatibel dengan Node 24.10 lokal; / mengarah ke dashboard. Detail/mutasi temuan, grafik/tren dashboard lengkap, kelola akun dan PDF belum tersedia. Belum deployment.
 
 ## Menjalankan
 
@@ -16,14 +16,17 @@ npm run dev
 Buka http://127.0.0.1:5173/. Backend diharapkan berjalan pada http://127.0.0.1:4000. Jalankan MongoDB dan `npm run seed:demo` di repo backend untuk membuat akun dan 18 temuan dummy (seed ulang tidak mereset data/sandi). Kredensial `camp`, `transport`, `ict`, `admin.ict` tersimpan privat di `.local/demo-accounts.json` backend; jangan menaruhnya di source atau VITE_*. Default tanpa .env sudah memadai; jika diperlukan salin .env.example ke .env yang belum ada. DEV_API_TARGET mengubah tujuan proxy development. Jangan menaruh secret dalam VITE_*.
 
 ```sh
+npm test
 npm run build
 ```
 
 Proxy development meneruskan /api dan /health. Fetch memakai credentials; token CSRF hanya di memori, cookie sesi HttpOnly. Reload/fokus mengambil identitas lewat /api/v1/auth/me, sesi habis/401 kembali ke login. Build/preview tidak otomatis mem-proxy API; atur VITE_SERVER_BASE_URL dan origin CORS untuk host build. Cookie lintas subdomain HTTPS belum diuji sampai hosting dikonfigurasi.
 
-Dashboard mengambil angka dari GET /api/v1/dashboard, bukan konstanta frontend. Pilih checkbox divisi dan bulan lalu Terapkan filter; tanpa divisi terpilih berarti semua. Bulan hanya memengaruhi indikator periodik, kartu status semua tanggal. Filter sukses tersimpan di query URL dan pulih setelah refresh. Perbarui data memakai scope yang ditampilkan; loading/kosong/galat dibedakan. Login dan dashboard masih satu route / sampai halaman daftar/detail memerlukan router.
+Dashboard mengambil angka dari GET /api/v1/dashboard, bukan konstanta frontend. Pilih checkbox divisi dan bulan lalu Terapkan filter; tanpa divisi terpilih berarti semua. Bulan hanya memengaruhi indikator periodik, kartu status semua tanggal. Filter sukses tersimpan di query URL dan pulih setelah refresh. Perbarui data memakai scope yang ditampilkan; loading/kosong/galat dibedakan. Dashboard kini di /dashboard. Route lama / mengarah ke dashboard dengan query yang sama. Navigasi router mengembalikan filter melalui Back/Forward/refresh; 401 kembali /login dan login berhasil mengembalikan tujuan internal yang sah. Tujuan eksternal tidak diterima. Deep link Vite lokal diuji; hosting nantinya memerlukan SPA fallback/rewrite, belum dikonfigurasi di Vercel pada tahap ini.
 
-Validasi D0-03: build lulus; browser Camp/Admin ICT, filter Camp+ICT/bulan, reset/refresh/URL, kosong/galat, logout, filter via keyboard dan drawer HP 390px tanpa overflow horizontal diperiksa. Backend mempunyai 37 tes yang dijalankan dengan MongoDB test nyata. Grafik/tren/per-divisi/tindak lanjut masih M-04; belum seluruh MVP.
+Daftar /findings mengambil baris dan ringkasan dari satu GET /api/v1/findings. Pilih divisi/pencarian/status, buka Filter lanjutan & urutan untuk prioritas, divisi pelapor, dasar/rentang tanggal, pembatalan, sort dan baris per halaman; lalu Terapkan filter. Kartu menghitung seluruh hasil sebelum pagination, data batal terpisah. Perubahan filter mulai page 1, Reset juga menghapus draf belum diterapkan. Belum tombol CRUD/detail/PDF semu.
+
+Validasi D0-04: 2 tes frontend (parameter berulang dan tujuan login), build, serta 51 tes backend dengan MongoDB nyata lulus. Browser Admin ICT/Camp, 12 hasil Camp+ICT pada tiga halaman ukuran 5, pencarian, data batal, URL/Back/refresh, empty/galat/reset, deep link/login ulang, desktop 1440px dan HP 390px diperiksa. Grafik/tren/per-divisi/tindak lanjut masih M-04; belum seluruh MVP.
 
 Output dist/ diabaikan Git. Vercel nantinya memakai root repo ini, npm run build dan dist; konfigurasi hosting belum diterapkan.
 
