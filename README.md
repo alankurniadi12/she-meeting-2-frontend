@@ -2,7 +2,7 @@
 
 Frontend Vue.js + JavaScript untuk aplikasi internal SHE Meeting.
 
-Status: D0-04 selesai diuji lokal. Login, dashboard ringkas, daftar rapat dengan pencarian/filter/status/badge/pagination tersedia. Route /login, /dashboard dan /findings memakai Vue Router 4.6.4 yang kompatibel dengan Node 24.10 lokal; / mengarah ke dashboard. Detail/mutasi temuan, grafik/tren dashboard lengkap, kelola akun dan PDF belum tersedia. Belum deployment.
+Status: D0-05 selesai diuji lokal. Login, dashboard ringkas, daftar rapat dengan pencarian/filter/status/badge/pagination tersedia. Route /login, /dashboard dan /findings memakai Vue Router 4.6.4 yang kompatibel dengan Node 24.10 lokal; / mengarah ke dashboard. Tambah/detail/koreksi/progres temuan tersedia di /findings/new, /findings/:id dan /findings/:id/edit. Riwayat lengkap, grafik/tren dashboard, kelola akun, pembatalan/foto/PDF belum tersedia. Belum deployment.
 
 ## Menjalankan
 
@@ -24,9 +24,13 @@ Proxy development meneruskan /api dan /health. Fetch memakai credentials; token 
 
 Dashboard mengambil angka dari GET /api/v1/dashboard, bukan konstanta frontend. Pilih checkbox divisi dan bulan lalu Terapkan filter; tanpa divisi terpilih berarti semua. Bulan hanya memengaruhi indikator periodik, kartu status semua tanggal. Filter sukses tersimpan di query URL dan pulih setelah refresh. Perbarui data memakai scope yang ditampilkan; loading/kosong/galat dibedakan. Dashboard kini di /dashboard. Route lama / mengarah ke dashboard dengan query yang sama. Navigasi router mengembalikan filter melalui Back/Forward/refresh; 401 kembali /login dan login berhasil mengembalikan tujuan internal yang sah. Tujuan eksternal tidak diterima. Deep link Vite lokal diuji; hosting nantinya memerlukan SPA fallback/rewrite, belum dikonfigurasi di Vercel pada tahap ini.
 
-Daftar /findings mengambil baris dan ringkasan dari satu GET /api/v1/findings. Pilih divisi/pencarian/status, buka Filter lanjutan & urutan untuk prioritas, divisi pelapor, dasar/rentang tanggal, pembatalan, sort dan baris per halaman; lalu Terapkan filter. Kartu menghitung seluruh hasil sebelum pagination, data batal terpisah. Perubahan filter mulai page 1, Reset juga menghapus draf belum diterapkan. Belum tombol CRUD/detail/PDF semu.
+Daftar /findings mengambil baris dan ringkasan dari satu GET /api/v1/findings. Pilih divisi/pencarian/status, buka Filter lanjutan & urutan untuk prioritas, divisi pelapor, dasar/rentang tanggal, pembatalan, sort dan baris per halaman; lalu Terapkan filter. Kartu menghitung seluruh hasil sebelum pagination, data batal terpisah. Perubahan filter mulai page 1, Reset juga menghapus draf belum diterapkan. Tambah temuan dan link Buka detail sekarang berfungsi. Detail menyediakan Koreksi informasi dan form progres; foto/PDF masih belum tersedia.
 
-Validasi D0-04: 2 tes frontend (parameter berulang dan tujuan login), build, serta 51 tes backend dengan MongoDB nyata lulus. Browser Admin ICT/Camp, 12 hasil Camp+ICT pada tiga halaman ukuran 5, pencarian, data batal, URL/Back/refresh, empty/galat/reset, deep link/login ulang, desktop 1440px dan HP 390px diperiksa. Grafik/tren/per-divisi/tindak lanjut masih M-04; belum seluruh MVP.
+D0-05: isi form tanpa target/foto bila belum ditentukan, simpan sebagai Diproses, lalu perbarui detail/progres/status. Tertunda wajib alasan; Selesai meminta pemahaman status untuk semua penanggung jawab, tanpa foto/approval. Koreksi dari Selesai ke aktif wajib alasan, kejadian berulang dibuat baru. Catatan terbaru dibatasi 10; riwayat lengkap menyusul D0-06.
+
+Draft hanya memori tab per akun/resource, tidak localStorage. Konflik menjaga draft, menampilkan tautan data terbaru atau explicit discard+reload setelah peringatan. Network/5xx tidak pasti mengunci isian untuk retry mutationId/payload yang sama. Navigasi dicegah saat menyimpan; refresh/menutup tab dapat menghapus draft dan diberi peringatan. Setelah sukses, detail dibaca ulang dan draft dibersihkan. Notice sukses tidak berasal dari URL. Belum pemulihan tahan refresh/offline atau peninjauan/merge konflik lengkap.
+
+Validasi D0-05: 5 tes frontend (URL/tujuan login, cache draft/retry dan notice), build, serta 62 tes backend MongoDB nyata lulus. Browser membuat temuan tanpa target/foto, koreksi, tunda/lanjut/Selesai, refresh, konflik dua tab tanpa hilang teks draft, native validasi alasan dan form/detail HP 390px serta desktop 1440px diperiksa. Daftar terfilter membaca hasil baru. M-04/D0-06 serta MVP lain belum seluruhnya selesai.
 
 Output dist/ diabaikan Git. Vercel nantinya memakai root repo ini, npm run build dan dist; konfigurasi hosting belum diterapkan.
 

@@ -17,6 +17,6 @@ export async function api(path, { method = 'GET', body } = {}) {
   let result;
   try { result = await response.json(); }
   catch { throw new Error('Respons server tidak dapat dibaca. Coba kembali.'); }
-  if (!response.ok) throw Object.assign(new Error(result.error?.message || 'Permintaan gagal. Coba kembali.'), { status: response.status, code: result.error?.code });
+  if (!response.ok) throw Object.assign(new Error(result.error?.message || 'Permintaan gagal. Coba kembali.'), { status: response.status, code: result.error?.code, fields: result.error?.fields, currentVersion: result.error?.currentVersion });
   return result;
 }

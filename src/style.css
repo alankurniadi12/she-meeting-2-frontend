@@ -1081,3 +1081,56 @@ h1 {
   .findings-pagination>div { gap:10px; width:100%; justify-content:space-between; }
   .findings-pagination .refresh-button { font-size:11px; }
 }
+
+/* D0-05: actual finding forms and detail/progress. */
+.list-actions { display:flex; align-items:center; gap:16px; margin:0 0 25px; }
+.list-actions .primary-button { font-size:13px; padding:11px 16px; }
+.list-actions span { font-size:12px; color:#6d7d93; }
+.finding-editor>.text-button { display:inline-block; margin-bottom:20px; }
+.finding-edit-form { padding:28px; }
+.finding-edit-form fieldset,.detail-progress-form fieldset { padding:0; margin:0; border:0; min-width:0; }
+.finding-edit-form legend { font-size:18px; font-weight:650; }
+.form-intro { color:#65758d; font-size:13px; line-height:1.8; margin:10px 0 25px; }
+.edit-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:23px 24px; }
+.full-field { grid-column:1/-1; }
+.filter-field textarea { font:inherit; font-size:14px; line-height:1.7; color:#2c4264; width:100%; min-width:0; resize:vertical; min-height:95px; padding:11px 12px; border:1px solid #cad5e5; border-radius:6px; }
+.filter-field textarea:focus-visible { outline:3px solid #e6a023; outline-offset:3px; }
+.filter-field small { font-size:11px; color:#6a7b94; line-height:1.8; }
+.field-label { font-size:12px; color:#52647f; font-weight:600; margin-bottom:12px; }
+.form-actions { display:flex; align-items:center; flex-wrap:wrap; gap:14px; margin-top:26px; }
+.form-actions .primary-button { font-size:13px; padding:11px 16px; }
+.form-actions span { font-size:11px; color:#738197; line-height:1.8; }
+.success-notice { border:1px solid #bddaca; background:#eef8f2; color:#31634e; padding:14px 18px; border-radius:7px; font-size:13px; margin:18px 0; }
+.detail-navigation { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:22px; }
+.detail-overview { padding:28px; }
+.detail-top { display:flex; align-items:start; justify-content:space-between; gap:20px; }
+.detail-top h2 { font-size:20px; margin-top:10px; font-weight:650; overflow-wrap:anywhere; }
+.detail-description { font-size:15px; line-height:1.95; color:#304867; white-space:pre-wrap; overflow-wrap:anywhere; margin:25px 0; }
+.detail-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:23px 30px; margin:0; padding-top:22px; border-top:1px solid #e8edf4; }
+.detail-grid dt { font-size:11px; color:#7b8a9f; margin-bottom:7px; }
+.detail-grid dd { margin:0; font-size:13px; color:#344e70; line-height:1.8; overflow-wrap:anywhere; }
+.detail-grid dd small { display:block; color:#7b8a9f; font-size:11px; }
+.hold-note { padding:15px 17px; background:#fff6e5; color:#856424; border-radius:6px; font-size:13px; line-height:1.9; margin-top:23px; white-space:pre-wrap; overflow-wrap:anywhere; }
+.detail-columns { display:grid; grid-template-columns:1fr 1.2fr; gap:22px; margin-top:24px; align-items:start; }
+.detail-progress-list,.detail-progress-form { padding:25px; min-width:0; }
+.detail-columns h2 { font-size:17px; font-weight:650; margin-bottom:22px; }
+.detail-progress-form .filter-field { margin-bottom:20px; }
+.detail-progress-form .edit-grid { gap:0 18px; }
+.progress-entries { padding:0; margin:0; list-style:none; }
+.progress-entries li { border-left:2px solid #dce6f4; padding:0 0 22px 17px; }
+.progress-entries p { font-size:13px; line-height:1.9; color:#364f70; overflow-wrap:anywhere; white-space:pre-wrap; }
+.progress-entries small { display:block; margin-top:8px; font-size:10px; color:#76879f; line-height:1.8; }
+.completion-confirm { display:flex; align-items:start; gap:10px; padding:14px; background:#edf7f1; border:1px solid #cae2d4; border-radius:6px; font-size:12px; color:#3c6b53; line-height:1.9; }
+.completion-confirm input { flex-shrink:0; margin-top:5px; accent-color:#2f7452; }
+@media(max-width:1050px) { .detail-columns { grid-template-columns:1fr; } }
+@media(max-width:600px) {
+  .list-actions { align-items:start; flex-direction:column; gap:10px; }
+  .finding-edit-form,.detail-overview { padding:22px 20px; }
+  .edit-grid,.detail-grid { grid-template-columns:1fr; }
+  .detail-top { flex-direction:column; gap:14px; }
+  .detail-progress-list,.detail-progress-form { padding:22px 20px; }
+  .detail-progress-form .edit-grid { grid-template-columns:1fr; }
+  .detail-navigation { gap:10px; }
+  .detail-navigation .text-button { font-size:11px; }
+  .detail-description { font-size:14px; }
+}

@@ -80,8 +80,9 @@ async function logout() {
     else message.value = error.message;
   } finally { busy.value = false; }
 }
-const pageTitle = computed(() => !account.value ? 'Masuk ke ruang kerja.' : route.name === 'findings' ? 'Daftar temuan' : route.name === 'dashboard' ? 'Dashboard temuan' : 'Halaman belum tersedia');
-const pageDescription = computed(() => !account.value ? 'Pencatatan dan tindak lanjut kondisi tidak aman untuk rapat lintas divisi.' : route.name === 'findings' ? 'Bahan pembahasan rapat, dengan pencarian dan status tindak lanjut terkini.' : `Selamat datang, ${account.value.displayName}. Pantau posisi temuan dan fokus tindak lanjut rapat.`);
+const titles = { dashboard: 'Dashboard temuan', findings: 'Daftar temuan', 'finding-new': 'Catat temuan', 'finding-edit': 'Koreksi temuan', 'finding-detail': 'Detail temuan' };
+const pageTitle = computed(() => !account.value ? 'Masuk ke ruang kerja.' : titles[route.name] || 'Halaman belum tersedia');
+const pageDescription = computed(() => !account.value ? 'Pencatatan dan tindak lanjut kondisi tidak aman untuk rapat lintas divisi.' : String(route.name).startsWith('finding') ? 'Catat kondisi dan ikuti tindak lanjut bersama divisi penanggung jawab.' : `Selamat datang, ${account.value.displayName}. Pantau posisi temuan dan fokus tindak lanjut rapat.`);
 watch([() => route.fullPath, checking, account], () => {
   if (checking.value) return;
   if (!account.value && route.meta.requiresAuth) void router.replace({ name: 'login', query: { redirect: route.fullPath } });
@@ -89,7 +90,7 @@ watch([() => route.fullPath, checking, account], () => {
 });
 watch(() => route.name, (name) => {
   menuOpen.value = false;
-  document.title = `SHE Meeting · ${{ login: 'Login', dashboard: 'Dashboard', findings: 'Daftar temuan' }[name] || 'Halaman tidak ditemukan'}`;
+  document.title = `SHE Meeting · ${{ login: 'Login', ...titles }[name] || 'Halaman tidak ditemukan'}`;
 }, { immediate: true });
 function onFocus() { if (account.value) void restoreSession(); }
 onMounted(() => { void restoreSession(); window.addEventListener('focus', onFocus); });
@@ -104,7 +105,7 @@ onUnmounted(() => { clearTimeout(expiryTimer); window.removeEventListener('focus
       <div class="sidebar-caption">RUANG KERJA</div>
       <template v-if="account">
         <RouterLink class="nav-link" active-class="active" to="/dashboard"><span class="nav-icon">▦</span> Dashboard</RouterLink>
-        <RouterLink class="nav-link" active-class="active" to="/findings"><span class="nav-icon">≡</span> Daftar temuan</RouterLink>
+        <RouterLink class="nav-link" :class="{ active: String(route.name).startsWith('finding') }" active-class="active" to="/findings"><span class="nav-icon">≡</span> Daftar temuan</RouterLink>
       </template>
       <RouterLink v-else class="nav-link" active-class="active" to="/login"><span class="nav-icon">▦</span> Masuk</RouterLink>
       <div class="sidebar-caption next-label">TAHAP BERIKUTNYA</div>
@@ -113,14 +114,14 @@ onUnmounted(() => { clearTimeout(expiryTimer); window.removeEventListener('focus
     </aside>
     <div class="workspace">
       <header class="topbar">
-        <div class="header-left"><button class="menu-button" aria-label="Buka navigasi" :aria-expanded="menuOpen" @click="menuOpen = !menuOpen">☰</button><RouterLink to="/dashboard">Home</RouterLink><span class="breadcrumb-slash">/</span><span>{{ account ? (route.name === 'findings' ? 'Daftar temuan' : 'Dashboard') : 'Masuk' }}</span></div>
+        <div class="header-left"><button class="menu-button" aria-label="Buka navigasi" :aria-expanded="menuOpen" @click="menuOpen = !menuOpen">☰</button><RouterLink to="/dashboard">Home</RouterLink><span class="breadcrumb-slash">/</span><span>{{ account ? (String(route.name).startsWith('finding') ? 'Daftar temuan' : 'Dashboard') : 'Masuk' }}</span></div>
         <div class="header-right"><span class="environment-tag">DEMO DUMMY</span><div class="account-state"><span class="avatar">{{ account?.displayName?.slice(0, 1) || 'S' }}</span><div><strong>{{ account?.displayName || 'Belum login' }}</strong><small>{{ account ? (account.role === 'ADMIN' ? 'Administrator' : 'Akun bersama divisi') : 'Akses internal' }}</small></div></div><button v-if="account" class="logout-button" :disabled="busy" @click="logout">{{ busy ? 'Memproses…' : 'Keluar' }}</button></div>
       </header>
       <main>
-        <div class="page-heading"><div><p class="eyebrow">SHE MEETING / {{ account ? 'RINGKASAN' : 'AKSES INTERNAL' }}</p><h1>{{ pageTitle }}</h1><p class="heading-description">{{ pageDescription }}</p></div><span class="stage-badge"><span></span> Tahap 04 — Daftar rapat</span></div>
+        <div class="page-heading"><div><p class="eyebrow">SHE MEETING / {{ account ? 'RINGKASAN' : 'AKSES INTERNAL' }}</p><h1>{{ pageTitle }}</h1><p class="heading-description">{{ pageDescription }}</p></div><span class="stage-badge"><span></span> Tahap 05 — Pencatatan</span></div>
         <p v-if="message" class="connection-alert" role="alert">{{ message }}</p>
         <section v-if="checking || (!account && route.meta.requiresAuth)" class="roadmap-panel" role="status">Memeriksa sesi akun…</section>
-        <RouterView v-else v-slot="{ Component }"><component :is="Component" :key="route.name" :busy="busy" :divisions="divisions" :divisions-error="loadError" @login="login" @reload-divisions="loadDivisions" @session-ended="clearSession('Sesi sudah berakhir. Silakan login kembali.')" /></RouterView>
+        <RouterView v-else v-slot="{ Component }"><component :is="Component" :key="route.name + ':' + (route.params.id || '')" :account="account" :busy="busy" :divisions="divisions" :divisions-error="loadError" @login="login" @reload-divisions="loadDivisions" @session-ended="clearSession('Sesi sudah berakhir. Silakan login kembali.')" /></RouterView>
         <footer class="page-footer"><span>SHE Meeting · Demo internal dengan data dummy</span><span>Belum untuk operasional</span></footer>
       </main>
     </div>

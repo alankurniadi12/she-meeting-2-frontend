@@ -11,7 +11,13 @@ export function loginDestination(value) {
   if (typeof value !== 'string') return '/dashboard';
   try {
     const url = new URL(value, window.location.origin);
-    return url.origin === window.location.origin && ['/dashboard', '/findings'].includes(url.pathname)
+    return url.origin === window.location.origin && (['/dashboard', '/findings', '/findings/new'].includes(url.pathname) || /^\/findings\/[a-fA-F0-9]{24}(?:\/edit)?$/.test(url.pathname))
       ? `${url.pathname}${url.search}` : '/dashboard';
   } catch { return '/dashboard'; }
+}
+export function findingReturnPath(value) {
+  try {
+    const url = new URL(typeof value === 'string' ? value : '/findings', window.location.origin);
+    return url.origin === window.location.origin && url.pathname === '/findings' ? `${url.pathname}${url.search}` : '/findings';
+  } catch { return '/findings'; }
 }
