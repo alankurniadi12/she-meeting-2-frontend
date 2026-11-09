@@ -111,7 +111,7 @@ onUnmounted(() => { requestNumber++; });
       </tr></tbody></table></div>
       <nav v-if="result.meta.total > 0" class="findings-pagination" aria-label="Pagination daftar temuan"><span>{{ rangeLabel }}</span><div><button class="refresh-button" :disabled="result.meta.page <= 1" @click="pageTo(result.meta.page - 1)">Sebelumnya</button><span>Halaman {{ number(result.meta.page) }} / {{ number(result.meta.totalPages) }}</span><button class="refresh-button" :disabled="result.meta.page >= result.meta.totalPages" @click="pageTo(result.meta.page + 1)">Berikutnya</button></div></nav>
       <div class="dashboard-footnote"><span>Data dimuat {{ timestamp(result.meta.asOf) }} · {{ result.meta.timeZone }}</span><span>Data batal dikecualikan dari kartu status.</span></div>
-      <aside class="dashboard-note"><strong>Daftar demo untuk rapat.</strong><p>Temuan bersama dihitung satu kali. Baru adalah label usia tujuh hari, bukan status pekerjaan. Buka detail untuk koreksi atau pembaruan progres. Foto, PDF, dan riwayat perubahan lengkap menyusul.</p></aside>
+      <aside class="dashboard-note"><strong>Daftar demo untuk rapat.</strong><p>Temuan bersama dihitung satu kali. Baru adalah label usia tujuh hari, bukan status pekerjaan. Buka detail untuk koreksi, progres, dan riwayat perubahan. Foto serta PDF belum tersedia.</p></aside>
     </template>
   </div>
 </template>

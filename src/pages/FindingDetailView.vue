@@ -22,12 +22,13 @@ const locked = computed(() => saving.value || conflict.value || state.value.unce
 const timestamp = (value) => value ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short', timeZone: row.value?.timeZone || 'Asia/Jakarta' }).format(new Date(value)) : '—';
 const date = (value) => value ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(`${value}T12:00:00Z`)) : 'Belum ditentukan';
 const actor = (value) => value?.source === 'DEMO_SEED' ? 'Seed data demo' : value?.displayName ? `Akun ${value.displayName}` : 'Akun tidak tersedia';
+const conflictValue = (value) => statuses[value] || priorities[value] || value || 'Kosong';
 const conflictFields = computed(() => {
   if (!conflict.value || !row.value || !state.value.form) return [];
   const original = JSON.parse(state.value.initial || '{}');
   const latest = { status: row.value.status, holdReason: row.value.holdReason || '', priority: row.value.priority || '', targetDate: row.value.targetDate || '' };
   return Object.keys(latest).filter((key) => JSON.stringify(original[key]) !== JSON.stringify(latest[key]) || JSON.stringify(original[key]) !== JSON.stringify(state.value.form[key]))
-    .map((key) => ({ key, label: { status: 'Status', holdReason: 'Alasan tertunda', priority: 'Prioritas', targetDate: 'Target' }[key], before: original[key] || 'Kosong', draft: state.value.form[key] || 'Kosong', latest: latest[key] || 'Kosong' }));
+    .map((key) => ({ key, label: { status: 'Status', holdReason: 'Alasan tertunda', priority: 'Prioritas', targetDate: 'Target' }[key], before: conflictValue(original[key]), draft: conflictValue(state.value.form[key]), latest: conflictValue(latest[key]) }));
 });
 async function reviewConflict() { await load(); }
 function rebaseDraft() {

@@ -118,7 +118,7 @@ onUnmounted(() => { clearTimeout(expiryTimer); window.removeEventListener('focus
         <div class="header-right"><span class="environment-tag">DEMO DUMMY</span><div class="account-state"><span class="avatar">{{ account?.displayName?.slice(0, 1) || 'S' }}</span><div><strong>{{ account?.displayName || 'Belum login' }}</strong><small>{{ account ? (account.role === 'ADMIN' ? 'Administrator' : 'Akun bersama divisi') : 'Akses internal' }}</small></div></div><button v-if="account" class="logout-button" :disabled="busy" @click="logout">{{ busy ? 'Memproses…' : 'Keluar' }}</button></div>
       </header>
       <main>
-        <div class="page-heading"><div><p class="eyebrow">SHE MEETING / {{ account ? 'RINGKASAN' : 'AKSES INTERNAL' }}</p><h1>{{ pageTitle }}</h1><p class="heading-description">{{ pageDescription }}</p></div><span class="stage-badge"><span></span> Tahap 05 — Pencatatan</span></div>
+        <div class="page-heading"><div><p class="eyebrow">SHE MEETING / {{ account ? 'RINGKASAN' : 'AKSES INTERNAL' }}</p><h1>{{ pageTitle }}</h1><p class="heading-description">{{ pageDescription }}</p></div><span class="stage-badge"><span></span> Demo alur rapat</span></div>
         <p v-if="message" class="connection-alert" role="alert">{{ message }}</p>
         <section v-if="checking || (!account && route.meta.requiresAuth)" class="roadmap-panel" role="status">Memeriksa sesi akun…</section>
         <RouterView v-else v-slot="{ Component }"><component :is="Component" :key="route.name + ':' + (route.params.id || '')" :account="account" :busy="busy" :divisions="divisions" :divisions-error="loadError" @login="login" @reload-divisions="loadDivisions" @session-ended="clearSession('Sesi sudah berakhir. Silakan login kembali.')" /></RouterView>
