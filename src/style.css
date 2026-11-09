@@ -899,3 +899,114 @@ h1 {
   .division-list { grid-template-columns:1fr; }
   .account-panel { flex-direction:column; }
 }
+
+/* D0-03: summary dashboard, all values are supplied by the API. */
+.panel { background:#fff; border:1px solid #e3e8f0; border-radius:10px; }
+.logout-button { border:1px solid #d8e1ed; background:white; color:#3b5275; border-radius:6px; padding:8px 11px; font-size:12px; white-space:nowrap; }
+.dashboard-filter { padding:22px 24px; margin-bottom:28px; }
+.dashboard-filter fieldset { padding:0; border:0; margin:0; min-width:0; }
+.dashboard-filter legend { font-size:14px; font-weight:650; margin-bottom:9px; padding:0; }
+.filter-heading { display:flex; gap:16px; justify-content:space-between; align-items:center; margin-bottom:18px; }
+.filter-heading p,.filter-help { font-size:12px; line-height:1.7; color:#65758d; }
+.text-button { color:#214b91; border:0; background:transparent; font-size:12px; padding:2px 0; text-decoration:underline; text-underline-offset:3px; white-space:nowrap; }
+.dashboard-filter-row { display:flex; gap:20px; align-items:end; }
+.division-options { display:flex; flex-wrap:wrap; align-self:center; gap:9px; flex:1; min-width:0; }
+.division-option { display:flex; align-items:center; gap:8px; font-size:13px; color:#3a4c66; border:1px solid #dce4ef; padding:10px 12px; border-radius:6px; background:#fafbfd; cursor:pointer; }
+.division-option:has(input:checked) { color:#234f95; border-color:#91add8; background:#eef3fc; }
+.division-option input { accent-color:#214b91; margin:0; width:15px; height:15px; }
+.division-option small { font-size:11px; }
+.month-filter { display:flex; flex-direction:column; gap:7px; min-width:0; }
+.month-filter label { font-size:12px; color:#52647f; }
+.month-filter input { font:inherit; font-size:13px; color:#2c4264; min-width:0; max-width:100%; padding:9px 10px; height:39px; background:#fff; border:1px solid #cad5e5; border-radius:6px; }
+.dashboard-filter .primary-button { height:39px; padding:9px 15px; white-space:nowrap; font-size:12px; }
+.filter-help { margin-top:14px; }
+.dashboard-filter input:focus-visible { outline:3px solid #e6a023; outline-offset:3px; }
+.dashboard-section-heading { display:flex; align-items:center; justify-content:space-between; gap:18px; margin:0 0 17px; }
+.dashboard-section-heading h2 { font-size:17px; font-weight:650; letter-spacing:-.3px; }
+.dashboard-section-heading p { font-size:12px; line-height:1.7; color:#6b7b92; margin-top:7px; }
+.dashboard-cards { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
+.metric-card { border:1px solid #e2e8f1; background:#fff; border-radius:10px; padding:21px 22px; min-width:0; }
+.metric-heading { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.metric-heading h3 { font-size:13px; font-weight:550; color:#53647d; }
+.metric-symbol { width:30px; height:30px; display:grid; place-items:center; border-radius:7px; font-size:18px; font-weight:600; background:#f0f3f8; color:#5c708d; }
+.progress .metric-symbol { background:#edf3fd; color:#2c5eae; }
+.hold .metric-symbol { background:#fff6e6; color:#a87921; }
+.complete .metric-symbol { background:#eaf7f1; color:#308467; }
+.metric-value { display:block; margin:18px 0 9px; font-size:34px; line-height:1; font-weight:650; letter-spacing:-1px; }
+.metric-card p { font-size:11px; line-height:1.7; color:#6c7c93; }
+.total { background:#1e407b; border-color:#1e407b; color:white; }
+.total .metric-heading h3,.total p { color:#dce7f8; }
+.total .metric-symbol { background:#ffffff18; color:#e7effb; }
+.attention-panel { display:grid; grid-template-columns:1.4fr 1fr 1fr; gap:24px; align-items:center; margin-top:24px; background:#edf2fa; border:1px solid #dce6f3; border-radius:10px; padding:25px 28px; }
+.attention-intro h2 { font-size:17px; margin:9px 0; font-weight:650; line-height:1.5; }
+.attention-intro p { font-size:12px; color:#647897; line-height:1.8; max-width:290px; }
+.attention-metric { padding-left:24px; border-left:1px solid #d6e1f0; display:flex; flex-direction:column; gap:7px; }
+.attention-metric strong { font-size:29px; font-weight:650; line-height:1.2; color:#244a83; }
+.attention-metric span { font-size:13px; font-weight:600; }
+.attention-metric small { color:#637896; font-size:11px; line-height:1.7; }
+.overdue-metric strong { color:#b54442; }
+.monthly-section { margin-top:30px; }
+.period-label { font-size:11px; color:#5a7090; border:1px solid #dce4f0; border-radius:5px; padding:7px 10px; white-space:nowrap; }
+.monthly-cards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.monthly-card { display:flex; align-items:center; gap:15px; padding:24px; }
+.monthly-icon { display:grid; place-items:center; min-width:36px; height:36px; border-radius:9px; color:#3d65a1; background:#eef3fb; font-size:20px; }
+.complete-icon { color:#40846b; background:#edf7f2; }
+.monthly-card h3 { font-size:13px; font-weight:650; }
+.monthly-card p { margin-top:7px; font-size:11px; line-height:1.7; color:#6d7c92; }
+.monthly-card strong { margin-left:auto; padding-left:12px; font-size:26px; font-weight:650; }
+.dashboard-footnote { display:flex; justify-content:space-between; gap:12px; font-size:11px; line-height:1.8; color:#6b7a91; margin-top:16px; }
+.dashboard-note { margin-top:24px; padding:18px 20px; border-left:3px solid #cb4551; background:#fff; border-radius:0 6px 6px 0; }
+.dashboard-note strong { font-size:12px; font-weight:650; }
+.dashboard-note p { font-size:12px; line-height:1.9; color:#65758d; margin-top:7px; }
+.dashboard-state { padding:44px 24px; text-align:center; color:#5a6f90; font-size:14px; }
+.loading-dot { display:inline-block; width:7px; height:7px; background:#426aab; border-radius:50%; margin-right:9px; }
+.error-state h3,.empty-dashboard h3 { font-size:15px; color:#374c6d; }
+.error-state p,.empty-dashboard p { font-size:13px; line-height:1.8; margin-top:9px; color:#6b7b92; }
+.error-state button { margin:18px auto 0; }
+.empty-dashboard { margin-top:18px; padding:24px; }
+@media(max-width:1150px) {
+  .dashboard-cards { gap:12px; }
+  .metric-card { padding:18px 16px; }
+  .dashboard-filter-row { flex-wrap:wrap; gap:16px; }
+  .division-options { flex-basis:100%; }
+  .attention-panel { grid-template-columns:1.2fr 1fr 1fr; padding:23px; gap:16px; }
+  .attention-metric { padding-left:16px; }
+  .monthly-card { padding:20px 18px; gap:12px; }
+}
+@media(max-width:850px) {
+  .dashboard-cards { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:600px) {
+  .header-right { gap:9px; }
+  .account-state { gap:7px; padding-left:8px; }
+  .account-state .avatar { width:28px; height:28px; font-size:12px; }
+  .account-state strong { font-size:12px; }
+  .logout-button { padding:7px 8px; font-size:11px; }
+  .dashboard-filter { padding:20px; margin-bottom:25px; }
+  .filter-heading { align-items:start; }
+  .filter-heading p { font-size:12px; }
+  .dashboard-filter-row { gap:14px; }
+  .division-option { padding:9px; font-size:12px; }
+  .month-filter { flex:1; }
+  .dashboard-filter .primary-button { padding:9px 11px; }
+  .dashboard-section-heading { align-items:start; gap:10px; }
+  .dashboard-section-heading h2 { font-size:16px; }
+  .dashboard-section-heading p { font-size:11px; }
+  .dashboard-section-heading .refresh-button { padding:8px; font-size:10px; }
+  .metric-card { padding:17px 14px; }
+  .metric-heading { gap:5px; }
+  .metric-heading h3 { font-size:12px; }
+  .metric-symbol { width:25px; height:25px; font-size:15px; }
+  .metric-value { font-size:30px; }
+  .metric-card p { font-size:10px; }
+  .attention-panel { grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; padding:23px 20px; }
+  .attention-intro { grid-column:1/-1; }
+  .attention-intro h2 { font-size:16px; }
+  .attention-intro p { max-width:none; }
+  .attention-metric { padding-left:0; border-left:0; }
+  .attention-metric small { font-size:10px; }
+  .monthly-cards { grid-template-columns:1fr; gap:12px; }
+  .period-label { display:none; }
+  .dashboard-footnote { flex-direction:column; gap:3px; font-size:10px; }
+  .dashboard-note { padding:16px; }
+}
