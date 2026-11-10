@@ -2,7 +2,7 @@
 
 Frontend Vue.js + JavaScript untuk aplikasi internal SHE Meeting.
 
-Status: D0-01 sampai D0-07 selesai untuk demo lokal. Login, dashboard ringkas, daftar rapat dengan pencarian/filter/status/badge/pagination tersedia. Route /login, /dashboard dan /findings memakai Vue Router 4.6.4 yang kompatibel dengan Node 24.10 lokal; / mengarah ke dashboard. Tambah/detail/koreksi/progres temuan tersedia di /findings/new, /findings/:id dan /findings/:id/edit. Grafik/tren dashboard, kelola akun, pembatalan/foto/PDF belum tersedia. Belum deployment.
+Status: D0-01 sampai D0-07 selesai untuk demo lokal. Login, dashboard ringkas, daftar rapat dengan pencarian/filter/status/badge/pagination tersedia. Route /login, /dashboard dan /findings memakai Vue Router 4.6.4 yang kompatibel dengan Node 24.10 lokal; / mengarah ke dashboard. Tambah/detail/koreksi/progres temuan tersedia di /findings/new, /findings/:id dan /findings/:id/edit. Grafik/tren dashboard, kelola akun, foto/PDF belum tersedia; pembatalan/pemulihan M-03 tersedia. Belum deployment.
 
 ## Menjalankan
 
@@ -50,3 +50,7 @@ Jangan commit .env, kredensial, node_modules, dist, database atau unggahan lokal
 D0-06: 6 tes frontend dan build lulus; endpoint riwayat diuji pada 63 tes backend dengan MongoDB test. Pada checkpoint D0-06, alur browser belum diverifikasi; D0-07 mengujinya. Perangkat kantor tetap belum diuji.
 
 D0-07: alur dashboard/filter/create/status/riwayat dua halaman dan konflik dua tab diuji di browser lokal. Bug rebase proxy Vue diperbaiki dan diuji ulang. Browser uji tetap 841 px walau override 390/1440 dicoba; tidak mengklaim uji layar HP/proyektor pada D0-07. Fitur D1, HTTPS dan presentasi leader belum selesai.
+
+## Pembatalan M-03
+
+Pada detail, akun login dapat membatalkan temuan dengan alasan wajib. Data batal tetap dapat dibuka melalui filter Batal, tetapi koreksi/progres hanya dibaca. Admin dapat memulihkan dengan alasan; riwayat menunjukkan kedua aksi dan before/after. Draf alasan dipertahankan saat konflik versi atau hasil jaringan tidak pasti. Validasi lokal: 7 tes frontend, build, 64 tes backend MongoDB dan alur browser dummy batal/pulih. Belum deployment.

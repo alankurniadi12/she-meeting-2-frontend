@@ -14,10 +14,18 @@ const error = ref(''); const fields = ref({}); const message = ref(takeSavedNoti
 const key = `${props.account.id}:progress:${route.params.id}`;
 const blank = () => ({ form: null, version: null, initial: '', pending: null, uncertain: false, baseStatus: null });
 const state = ref(getDraft(key, blank));
+const cancelKey = `${props.account.id}:cancel:${route.params.id}`;
+const restoreKey = `${props.account.id}:restore:${route.params.id}`;
+const actionBlank = () => ({ reason: '', version: null, pending: null, uncertain: false });
+const cancelState = ref(getDraft(cancelKey, actionBlank));
+const restoreState = ref(getDraft(restoreKey, actionBlank));
+const actionState = computed(() => row.value?.cancelledAt ? restoreState.value : cancelState.value);
+const actionConflict = ref(false); const actionSaving = ref(false); const actionError = ref('');
 const returnPath = computed(() => findingReturnPath(route.query.returnTo));
 const statuses = { IN_PROGRESS: 'Diproses', ON_HOLD: 'Tertunda', COMPLETED: 'Selesai' };
 const priorities = { LOW: 'Rendah', MEDIUM: 'Sedang', HIGH: 'Tinggi' };
 const dirty = computed(() => state.value.form && JSON.stringify(state.value.form) !== state.value.initial);
+const actionDirty = computed(() => Boolean(cancelState.value.reason || restoreState.value.reason || cancelState.value.uncertain || restoreState.value.uncertain));
 const locked = computed(() => saving.value || conflict.value || state.value.uncertain || row.value?.cancelledAt);
 const timestamp = (value) => value ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short', timeZone: row.value?.timeZone || 'Asia/Jakarta' }).format(new Date(value)) : '—';
 const date = (value) => value ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(`${value}T12:00:00Z`)) : 'Belum ditentukan';
@@ -43,6 +51,7 @@ async function load() {
   loading.value = true; error.value = '';
   try {
     row.value = (await api(`/findings/${route.params.id}`)).data;
+    if (!actionState.value.reason && !actionState.value.pending && !actionState.value.uncertain) actionState.value.version = row.value.version;
     if (!state.value.form || (!dirty.value && !state.value.uncertain && !state.value.pending)) {
       state.value.form = { text: '', status: row.value.status, holdReason: row.value.holdReason || '', priority: row.value.priority || '', targetDate: row.value.targetDate || '', correctionReason: '', confirmComplete: false };
       state.value.version = row.value.version; state.value.baseStatus = row.value.status; state.value.initial = JSON.stringify(state.value.form);
@@ -50,6 +59,33 @@ async function load() {
     conflict.value = state.value.version !== row.value.version && !state.value.uncertain;
   } catch (failure) { if (failure.status === 401) emit('session-ended'); else error.value = failure.message; }
   finally { loading.value = false; }
+}
+function rebaseAction() { actionState.value.version = row.value.version; actionState.value.pending = null; actionConflict.value = false; actionError.value = ''; }
+async function saveCancellation() {
+  if (actionSaving.value || actionConflict.value || !row.value) return;
+  const restoring = Boolean(row.value.cancelledAt);
+  if (restoring && props.account.role !== 'ADMIN') return;
+  const draft = restoring ? restoreState.value : cancelState.value;
+  actionSaving.value = true; actionError.value = '';
+  try {
+    await api(`/findings/${route.params.id}/${restoring ? 'restore' : 'cancel'}`, { method: 'POST',
+      body: pendingMutation(draft, { version: draft.version, reason: draft.reason }) });
+    forgetDraft(restoring ? restoreKey : cancelKey);
+    if (restoring) restoreState.value = getDraft(restoreKey, actionBlank);
+    else cancelState.value = getDraft(cancelKey, actionBlank);
+    actionConflict.value = false;
+    message.value = restoring ? 'Temuan berhasil dipulihkan.' : 'Temuan berhasil dibatalkan.';
+    row.value = null;
+    await load();
+  } catch (failure) {
+    failedMutation(draft, failure);
+    if (failure.status === 401) emit('session-ended');
+    else {
+      actionError.value = failure.message;
+      actionConflict.value = failure.code === 'VERSION_CONFLICT';
+      if (actionConflict.value) await load();
+    }
+  } finally { actionSaving.value = false; }
 }
 async function discardAndReload() {
   if (!window.confirm('Buang draf progres dan muat data terbaru? Salin catatan yang masih dibutuhkan terlebih dahulu.')) return;
@@ -73,8 +109,8 @@ async function save() {
     else { error.value = failure.message; fields.value = failure.fields || {}; conflict.value = failure.code === 'VERSION_CONFLICT'; if (conflict.value) await reviewConflict(); }
   } finally { saving.value = false; }
 }
-function unload(event) { if (dirty.value || state.value.uncertain || saving.value) { event.preventDefault(); event.returnValue = ''; } }
-onBeforeRouteLeave(() => !saving.value && ((!dirty.value && !state.value.uncertain) || window.confirm('Ada draf progres belum disimpan. Tinggalkan halaman? Draf hanya sementara di memori tab ini.')));
+function unload(event) { if (dirty.value || actionDirty.value || state.value.uncertain || saving.value || actionSaving.value) { event.preventDefault(); event.returnValue = ''; } }
+onBeforeRouteLeave(() => !saving.value && !actionSaving.value && ((!dirty.value && !actionDirty.value && !state.value.uncertain) || window.confirm('Ada draf belum disimpan. Tinggalkan halaman? Draf hanya sementara di memori tab ini.')));
 onMounted(() => { void load(); window.addEventListener('beforeunload', unload); });
 onUnmounted(() => window.removeEventListener('beforeunload', unload));
 </script>
@@ -87,7 +123,7 @@ onUnmounted(() => window.removeEventListener('beforeunload', unload));
       <section class="panel detail-overview"><div class="detail-top"><div><p class="finding-reference">{{ row.reference }}</p><h2>{{ row.location }}</h2></div><div class="finding-badges"><span class="finding-status" :class="row.status">{{ statuses[row.status] }}</span><span v-if="row.cancelledAt" class="finding-badge cancelled-badge">Dibatalkan</span><span v-if="row.isNew && !row.cancelledAt" class="finding-badge new-badge">Baru</span><span v-if="row.isOverdue" class="finding-badge overdue-badge">Terlambat</span></div></div>
         <p class="detail-description">{{ row.description }}</p>
         <dl class="detail-grid"><div><dt>Tanggal laporan</dt><dd>{{ date(row.reportedDate) }}</dd></div><div><dt>Pelapor</dt><dd>{{ row.reporterName }} · {{ row.reporterDivision.name || 'Divisi tidak tersedia' }}</dd></div><div><dt>Penanggung jawab</dt><dd>{{ row.responsibleDivisions.map(division => division.name || 'Divisi tidak tersedia').join(', ') }}</dd></div><div><dt>Prioritas</dt><dd>{{ priorities[row.priority] || 'Belum dinilai' }}</dd></div><div><dt>Target penyelesaian</dt><dd>{{ date(row.targetDate) }}</dd></div><div><dt>Dicatat selesai</dt><dd>{{ timestamp(row.completedAt) }}</dd></div><div><dt>Dicatat oleh</dt><dd>{{ actor(row.createdBy) }}<small>{{ timestamp(row.createdAt) }}</small></dd></div><div><dt>Pembaruan terakhir</dt><dd>{{ actor(row.updatedBy) }}<small>{{ timestamp(row.updatedAt) }}</small></dd></div></dl>
-        <p v-if="row.status === 'ON_HOLD'" class="hold-note"><strong>Alasan tertunda:</strong> {{ row.holdReason }}</p><p v-if="row.cancelledAt" class="connection-alert">Dibatalkan: {{ row.cancellationReason }}. Data hanya dapat dibaca.</p>
+        <p v-if="row.status === 'ON_HOLD'" class="hold-note"><strong>Alasan tertunda:</strong> {{ row.holdReason }}</p><div v-if="row.cancelledAt" class="connection-alert"><p>Dibatalkan oleh {{ actor(row.cancelledBy) }} pada {{ timestamp(row.cancelledAt) }}.</p><p>Alasan: {{ row.cancellationReason }}</p><p>Data hanya dapat dibaca sampai dipulihkan admin.</p></div>
         <p class="filter-help">{{ row.attachmentCount ? `${row.attachmentCount} metadata foto tercatat; akses foto belum tersedia.` : 'Tanpa foto. Foto tidak wajib untuk pencatatan atau status Selesai.' }}</p>
       </section>
       <div class="detail-columns"><FindingHistory :id="row.id" :time-zone="row.timeZone" />
@@ -98,6 +134,11 @@ onUnmounted(() => window.removeEventListener('beforeunload', unload));
         <label v-if="state.form.status === 'COMPLETED' && state.baseStatus !== 'COMPLETED'" class="completion-confirm"><input v-model="state.form.confirmComplete" type="checkbox" required /><span>Saya mencatat pekerjaan selesai untuk seluruh divisi penanggung jawab pada temuan ini. Tidak memerlukan foto atau persetujuan dalam aplikasi.</span></label>
         </fieldset><div class="form-actions"><button class="primary-button" type="submit" :disabled="saving || conflict">{{ saving ? 'Menyimpan…' : state.uncertain ? 'Coba simpan kembali' : 'Simpan pembaruan' }}</button></div></form><p v-else class="heading-description">Pembaruan pada temuan batal tidak tersedia.</p>
       </section></div>
+      <section v-if="!row.cancelledAt || account.role === 'ADMIN'" class="panel detail-cancellation"><h2>{{ row.cancelledAt ? 'Pulihkan temuan' : 'Batalkan temuan' }}</h2><p class="filter-help">{{ row.cancelledAt ? 'Hanya admin dapat memulihkan. Status pekerjaan dan riwayat sebelumnya tetap ada.' : 'Gunakan untuk salah input atau duplikat. Data dan riwayat tetap tersimpan.' }}</p>
+        <p v-if="actionError" class="connection-alert" role="alert">{{ actionError }}</p><p v-if="actionConflict" class="connection-alert" role="alert">Versi data berubah. Alasan tetap dalam draf. Tinjau detail terbaru sebelum memakai versi baru. <button type="button" class="text-button" @click="rebaseAction">Gunakan versi terbaru</button></p>
+        <p v-if="actionState.uncertain" class="connection-alert" role="alert">Hasil simpan belum pasti. Coba lagi dengan isian yang sama.</p>
+        <form @submit.prevent="saveCancellation"><fieldset :disabled="actionSaving || actionConflict || actionState.uncertain"><label for="cancellation-reason">{{ row.cancelledAt ? 'Alasan pemulihan' : 'Alasan pembatalan' }} *</label><textarea id="cancellation-reason" v-model="actionState.reason" required maxlength="2000" rows="3"></textarea></fieldset><button class="text-button" type="submit" :disabled="actionSaving || actionConflict">{{ actionSaving ? 'Menyimpan…' : actionState.uncertain ? 'Coba simpan kembali' : row.cancelledAt ? 'Pulihkan temuan' : 'Batalkan temuan' }}</button></form>
+      </section>
     </template>
   </div>
 </template>

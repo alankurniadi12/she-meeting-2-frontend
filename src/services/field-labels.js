@@ -3,4 +3,5 @@ export const fieldLabels = {
   reporterName: 'Nama pelapor', reporterDivisionId: 'Divisi pelapor', responsibleDivisionIds: 'Divisi penanggung jawab',
   priority: 'Prioritas', targetDate: 'Target penyelesaian', status: 'Status pekerjaan', holdReason: 'Alasan tertunda',
   correctionReason: 'Alasan koreksi', text: 'Catatan progres', version: 'Versi data', mutationId: 'Operasi simpan',
+  reason: 'Alasan',
 };
