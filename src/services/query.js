@@ -6,6 +6,10 @@ export function encodeQuery(query) {
   }
   return params.toString();
 }
+export function findingExportQuery(query) {
+  const { page, pageSize, ...filters } = query;
+  return encodeQuery(filters);
+}
 // Only internal, implemented destinations are accepted after login.
 export function loginDestination(value) {
   if (typeof value !== 'string') return '/dashboard';

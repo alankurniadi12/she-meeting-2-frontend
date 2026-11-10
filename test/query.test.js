@@ -1,10 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { encodeQuery, loginDestination, findingReturnPath } from '../src/services/query.js';
+import { encodeQuery, findingExportQuery, loginDestination, findingReturnPath } from '../src/services/query.js';
 
 test('query mempertahankan parameter berulang untuk validasi server', () => {
   assert.equal(encodeQuery({ status: ['ON_HOLD', 'COMPLETED'], q: 'a+b', page: undefined }), 'status=ON_HOLD&status=COMPLETED&q=a%2Bb');
   assert.equal(encodeQuery({ q: null }), 'q=');
+});
+test('ekspor memakai seluruh filter tanpa nomor atau ukuran halaman', () => {
+  assert.equal(findingExportQuery({ status: 'ON_HOLD', responsibleDivisionIds: 'abc,def', page: '3', pageSize: '5' }),
+    'status=ON_HOLD&responsibleDivisionIds=abc%2Cdef');
 });
 test('tujuan setelah login hanya menerima halaman internal yang diimplementasikan', (t) => {
   const previous = globalThis.window;

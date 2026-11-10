@@ -124,7 +124,7 @@ onUnmounted(() => { requestNumber++; });
         <ul v-else class="followup-list"><li v-for="row in data.followUps" :key="row.id"><div><router-link :to="{ name: 'finding-detail', params: { id: row.id } }">{{ row.reference }}</router-link><span>{{ row.location || 'Lokasi belum ada' }} · dilaporkan {{ formatDate(row.reportedDate) }}</span></div><div><strong>{{ row.isOverdue ? 'Terlambat' : row.status === 'ON_HOLD' ? 'Tertunda' : 'Diproses' }}</strong><span>Target {{ formatDate(row.targetDate) }} · update {{ formatUpdate(row.updatedAt) }}</span></div></li></ul>
       </section>
       <div class="dashboard-footnote"><span>Data dimuat {{ updatedLabel }} · {{ data.timeZone }}</span><span>Perbarui data untuk melihat perubahan terbaru.</span></div>
-      <aside class="dashboard-note"><strong>Data demo untuk mencoba alur rapat.</strong><p>Temuan bersama beberapa divisi dihitung satu kali. Status Selesai merupakan catatan pengguna; bukan bukti inspeksi independen. Pencatatan, riwayat, dan foto opsional tersedia melalui Daftar temuan. PDF belum tersedia.</p></aside>
+      <aside class="dashboard-note"><strong>Data demo untuk mencoba alur rapat.</strong><p>Temuan bersama beberapa divisi dihitung satu kali. Status Selesai merupakan catatan pengguna; bukan bukti inspeksi independen. Pencatatan, riwayat, foto opsional, dan ekspor PDF tersedia melalui Daftar temuan.</p></aside>
     </template>
   </div>
 </template>

@@ -111,8 +111,6 @@ onUnmounted(() => { clearTimeout(expiryTimer); window.removeEventListener('focus
         <RouterLink v-if="account.role === 'ADMIN'" class="nav-link" active-class="active" to="/admin/divisions"><span class="nav-icon">▤</span> Kelola divisi</RouterLink>
       </template>
       <RouterLink v-else class="nav-link" active-class="active" to="/login"><span class="nav-icon">▦</span> Masuk</RouterLink>
-      <div class="sidebar-caption next-label">TAHAP BERIKUTNYA</div>
-      <div class="planned-nav">PDF <span class="soon">Nanti</span></div>
       <div class="sidebar-bottom"><span class="little-mark">SHE</span><div><strong>Demo · data dummy</strong><p>Belum untuk data operasional.</p></div></div>
     </aside>
     <div class="workspace">

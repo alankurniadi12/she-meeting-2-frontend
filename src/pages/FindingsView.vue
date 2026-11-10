@@ -1,8 +1,8 @@
 <script setup>
 import { computed, onUnmounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { api } from '../services/api.js';
-import { encodeQuery } from '../services/query.js';
+import { api, apiUrl } from '../services/api.js';
+import { encodeQuery, findingExportQuery } from '../services/query.js';
 
 defineProps({ divisions: { type: Array, default: () => [] }, divisionsError: { type: String, default: '' } });
 const emit = defineEmits(['session-ended', 'reload-divisions']);
@@ -11,6 +11,8 @@ const router = useRouter();
 const result = ref(null);
 const loading = ref(true);
 const error = ref('');
+const exporting = ref(false);
+const exportError = ref('');
 const defaultFilters = () => ({ ids: [], q: '', status: '', priority: '', reporterDivisionId: '', from: '', to: '', dateBasis: 'reported', cancellation: 'active', sort: 'reportedDate:desc', pageSize: '20' });
 const draft = reactive(defaultFilters());
 let requestNumber = 0;
@@ -61,6 +63,33 @@ function applyFilters() {
 }
 function pageTo(page) { void navigate({ ...route.query, page: String(page) }); }
 function resetFilters() { Object.assign(draft, defaultFilters()); void navigate({}); }
+async function downloadPdf() {
+  if (exporting.value) return;
+  exporting.value = true;
+  exportError.value = '';
+  const query = findingExportQuery(route.query);
+  try {
+    const response = await fetch(apiUrl(`/exports/findings.pdf${query ? `?${query}` : ''}`), {
+      credentials: 'include', cache: 'no-store', signal: AbortSignal.timeout(120000),
+    });
+    if (!response.ok) {
+      if (response.status === 401) { emit('session-ended'); return; }
+      const body = await response.json().catch(() => null);
+      throw new Error(body?.error?.message || 'PDF belum dapat dibuat. Coba lagi.');
+    }
+    if (!response.headers.get('content-type')?.includes('application/pdf')) throw new Error('Respons PDF tidak valid. Coba lagi.');
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `she-meeting-temuan-${new Date().toISOString().slice(0, 10)}.pdf`;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch (failure) { exportError.value = failure.message || 'PDF belum dapat dibuat. Coba lagi.'; }
+  finally { exporting.value = false; }
+}
 watch(() => route.fullPath, () => {
   if (route.name !== 'findings') return;
   const scalar = (key, fallback = '') => typeof route.query[key] === 'string' ? route.query[key] : fallback;
@@ -94,7 +123,7 @@ onUnmounted(() => { requestNumber++; });
         </div><p class="filter-help">Rentang tanggal mencakup kedua tanggal. Dasar tanggal selesai hanya menampilkan temuan yang kini Selesai.</p></details>
       </fieldset></form>
     </section>
-    <div class="list-actions"><RouterLink class="primary-button" :to="{ name: 'finding-new', query: { returnTo: route.fullPath } }">Tambah temuan</RouterLink><span>Foto opsional · status awal Diproses</span></div><div class="dashboard-section-heading"><div><h2>Temuan untuk pembahasan</h2><p>Ringkasan mengikuti seluruh hasil filter, sebelum pembagian halaman.</p></div><button class="refresh-button" :disabled="loading" @click="load"><span aria-hidden="true">↻</span>{{ loading ? 'Memuat…' : 'Perbarui data' }}</button></div>
+    <div class="list-actions"><RouterLink class="primary-button" :to="{ name: 'finding-new', query: { returnTo: route.fullPath } }">Tambah temuan</RouterLink><button class="refresh-button" type="button" :disabled="exporting || loading || !!error" @click="downloadPdf">{{ exporting ? 'Membuat PDF…' : 'Unduh PDF hasil filter' }}</button><span>PDF mencakup seluruh hasil filter, bukan hanya halaman ini.</span></div><div v-if="exportError" class="connection-alert" role="alert">{{ exportError }}</div><div class="dashboard-section-heading"><div><h2>Temuan untuk pembahasan</h2><p>Ringkasan mengikuti seluruh hasil filter, sebelum pembagian halaman.</p></div><button class="refresh-button" :disabled="loading" @click="load"><span aria-hidden="true">↻</span>{{ loading ? 'Memuat…' : 'Perbarui data' }}</button></div>
     <section v-if="loading" class="panel dashboard-state" role="status">Memuat daftar dan ringkasan dari server…</section>
     <section v-else-if="error" class="panel dashboard-state error-state" role="alert"><h3>Daftar belum dapat dimuat</h3><p>{{ error }}</p><button class="refresh-button" @click="load">Coba lagi</button></section>
     <template v-else-if="result">
@@ -111,7 +140,7 @@ onUnmounted(() => { requestNumber++; });
       </tr></tbody></table></div>
       <nav v-if="result.meta.total > 0" class="findings-pagination" aria-label="Pagination daftar temuan"><span>{{ rangeLabel }}</span><div><button class="refresh-button" :disabled="result.meta.page <= 1" @click="pageTo(result.meta.page - 1)">Sebelumnya</button><span>Halaman {{ number(result.meta.page) }} / {{ number(result.meta.totalPages) }}</span><button class="refresh-button" :disabled="result.meta.page >= result.meta.totalPages" @click="pageTo(result.meta.page + 1)">Berikutnya</button></div></nav>
       <div class="dashboard-footnote"><span>Data dimuat {{ timestamp(result.meta.asOf) }} · {{ result.meta.timeZone }}</span><span>Data batal dikecualikan dari kartu status.</span></div>
-      <aside class="dashboard-note"><strong>Daftar demo untuk rapat.</strong><p>Temuan bersama dihitung satu kali. Baru adalah label usia tujuh hari, bukan status pekerjaan. Buka detail untuk koreksi, progres, dan riwayat perubahan. Foto serta PDF belum tersedia.</p></aside>
+      <aside class="dashboard-note"><strong>Daftar demo untuk rapat.</strong><p>Temuan bersama dihitung satu kali. Baru adalah label usia tujuh hari, bukan status pekerjaan. Buka detail untuk koreksi, progres, foto, dan riwayat perubahan. PDF mengikuti filter yang sudah diterapkan pada URL.</p></aside>
     </template>
   </div>
 </template>
