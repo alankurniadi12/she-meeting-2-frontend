@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { onBeforeRouteLeave, useRoute } from 'vue-router';
-import { api } from '../services/api.js';
+import { api, apiUrl, uploadPhoto } from '../services/api.js';
 import { fieldLabels } from '../services/field-labels.js';
 import { findingReturnPath } from '../services/query.js';
 import { getDraft, forgetDraft, pendingMutation, failedMutation, takeSavedNotice } from '../services/drafts.js';
@@ -21,11 +21,13 @@ const cancelState = ref(getDraft(cancelKey, actionBlank));
 const restoreState = ref(getDraft(restoreKey, actionBlank));
 const actionState = computed(() => row.value?.cancelledAt ? restoreState.value : cancelState.value);
 const actionConflict = ref(false); const actionSaving = ref(false); const actionError = ref('');
+const photos = ref([]); const photoError = ref(''); const photoSaving = ref(false); const photoFile = ref(null);
+const photoKind = ref('PROGRESS'); const photoPending = ref(null); const photoUncertain = ref(false); const photoConflict = ref(false);
 const returnPath = computed(() => findingReturnPath(route.query.returnTo));
 const statuses = { IN_PROGRESS: 'Diproses', ON_HOLD: 'Tertunda', COMPLETED: 'Selesai' };
 const priorities = { LOW: 'Rendah', MEDIUM: 'Sedang', HIGH: 'Tinggi' };
 const dirty = computed(() => state.value.form && JSON.stringify(state.value.form) !== state.value.initial);
-const actionDirty = computed(() => Boolean(cancelState.value.reason || restoreState.value.reason || cancelState.value.uncertain || restoreState.value.uncertain));
+const actionDirty = computed(() => Boolean(cancelState.value.reason || restoreState.value.reason || cancelState.value.uncertain || restoreState.value.uncertain || photoFile.value));
 const locked = computed(() => saving.value || conflict.value || state.value.uncertain || row.value?.cancelledAt);
 const timestamp = (value) => value ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short', timeZone: row.value?.timeZone || 'Asia/Jakarta' }).format(new Date(value)) : '—';
 const date = (value) => value ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(`${value}T12:00:00Z`)) : 'Belum ditentukan';
@@ -51,6 +53,8 @@ async function load() {
   loading.value = true; error.value = '';
   try {
     row.value = (await api(`/findings/${route.params.id}`)).data;
+    try { photos.value = (await api(`/findings/${route.params.id}/attachments`)).data; photoError.value = ''; }
+    catch (failure) { photoError.value = failure.message; }
     if (!actionState.value.reason && !actionState.value.pending && !actionState.value.uncertain) actionState.value.version = row.value.version;
     if (!state.value.form || (!dirty.value && !state.value.uncertain && !state.value.pending)) {
       state.value.form = { text: '', status: row.value.status, holdReason: row.value.holdReason || '', priority: row.value.priority || '', targetDate: row.value.targetDate || '', correctionReason: '', confirmComplete: false };
@@ -61,6 +65,25 @@ async function load() {
   finally { loading.value = false; }
 }
 function rebaseAction() { actionState.value.version = row.value.version; actionState.value.pending = null; actionConflict.value = false; actionError.value = ''; }
+function selectPhoto(event) { photoFile.value = event.target.files?.[0] || null; photoPending.value = null; photoUncertain.value = false; photoConflict.value = false; photoError.value = ''; }
+async function savePhoto() {
+  if (!row.value || row.value.cancelledAt || !photoFile.value || photoSaving.value || photoConflict.value) return;
+  if (photoFile.value.size > 5 * 1024 * 1024) { photoError.value = 'Foto maksimal 5 MiB.'; return; }
+  photoSaving.value = true; photoError.value = '';
+  if (!photoPending.value) photoPending.value = { version: row.value.version, mutationId: crypto.randomUUID(), kind: photoKind.value };
+  try {
+    await uploadPhoto(`/findings/${route.params.id}/attachments`, photoPending.value, photoFile.value);
+    photoFile.value = null; photoPending.value = null; photoUncertain.value = false; photoConflict.value = false;
+    message.value = 'Foto berhasil disimpan.'; row.value = null; await load();
+  } catch (failure) {
+    if (failure.status === 401) emit('session-ended');
+    else { photoError.value = failure.message; photoConflict.value = failure.code === 'VERSION_CONFLICT';
+      photoUncertain.value = !failure.status || failure.status >= 500;
+      if (failure.status && failure.status < 500 && !photoConflict.value) photoPending.value = null;
+      if (photoConflict.value) await load(); }
+  } finally { photoSaving.value = false; }
+}
+function rebasePhoto() { photoPending.value = null; photoConflict.value = false; photoUncertain.value = false; photoError.value = ''; }
 async function saveCancellation() {
   if (actionSaving.value || actionConflict.value || !row.value) return;
   const restoring = Boolean(row.value.cancelledAt);
@@ -109,8 +132,8 @@ async function save() {
     else { error.value = failure.message; fields.value = failure.fields || {}; conflict.value = failure.code === 'VERSION_CONFLICT'; if (conflict.value) await reviewConflict(); }
   } finally { saving.value = false; }
 }
-function unload(event) { if (dirty.value || actionDirty.value || state.value.uncertain || saving.value || actionSaving.value) { event.preventDefault(); event.returnValue = ''; } }
-onBeforeRouteLeave(() => !saving.value && !actionSaving.value && ((!dirty.value && !actionDirty.value && !state.value.uncertain) || window.confirm('Ada draf belum disimpan. Tinggalkan halaman? Draf hanya sementara di memori tab ini.')));
+function unload(event) { if (dirty.value || actionDirty.value || state.value.uncertain || saving.value || actionSaving.value || photoSaving.value) { event.preventDefault(); event.returnValue = ''; } }
+onBeforeRouteLeave(() => !saving.value && !actionSaving.value && !photoSaving.value && ((!dirty.value && !actionDirty.value && !state.value.uncertain) || window.confirm('Ada draf belum disimpan. Tinggalkan halaman? Draf hanya sementara di memori tab ini.')));
 onMounted(() => { void load(); window.addEventListener('beforeunload', unload); });
 onUnmounted(() => window.removeEventListener('beforeunload', unload));
 </script>
@@ -124,7 +147,11 @@ onUnmounted(() => window.removeEventListener('beforeunload', unload));
         <p class="detail-description">{{ row.description }}</p>
         <dl class="detail-grid"><div><dt>Tanggal laporan</dt><dd>{{ date(row.reportedDate) }}</dd></div><div><dt>Pelapor</dt><dd>{{ row.reporterName }} · {{ row.reporterDivision.name || 'Divisi tidak tersedia' }}</dd></div><div><dt>Penanggung jawab</dt><dd>{{ row.responsibleDivisions.map(division => division.name || 'Divisi tidak tersedia').join(', ') }}</dd></div><div><dt>Prioritas</dt><dd>{{ priorities[row.priority] || 'Belum dinilai' }}</dd></div><div><dt>Target penyelesaian</dt><dd>{{ date(row.targetDate) }}</dd></div><div><dt>Dicatat selesai</dt><dd>{{ timestamp(row.completedAt) }}</dd></div><div><dt>Dicatat oleh</dt><dd>{{ actor(row.createdBy) }}<small>{{ timestamp(row.createdAt) }}</small></dd></div><div><dt>Pembaruan terakhir</dt><dd>{{ actor(row.updatedBy) }}<small>{{ timestamp(row.updatedAt) }}</small></dd></div></dl>
         <p v-if="row.status === 'ON_HOLD'" class="hold-note"><strong>Alasan tertunda:</strong> {{ row.holdReason }}</p><div v-if="row.cancelledAt" class="connection-alert"><p>Dibatalkan oleh {{ actor(row.cancelledBy) }} pada {{ timestamp(row.cancelledAt) }}.</p><p>Alasan: {{ row.cancellationReason }}</p><p>Data hanya dapat dibaca sampai dipulihkan admin.</p></div>
-        <p class="filter-help">{{ row.attachmentCount ? `${row.attachmentCount} metadata foto tercatat; akses foto belum tersedia.` : 'Tanpa foto. Foto tidak wajib untuk pencatatan atau status Selesai.' }}</p>
+        <p class="filter-help">{{ row.attachmentCount ? `${row.attachmentCount} foto tersimpan.` : 'Tanpa foto. Foto tidak wajib untuk pencatatan atau status Selesai.' }}</p>
+      </section>
+      <section class="panel detail-photos"><h2>Foto temuan</h2><p v-if="photoError" class="connection-alert" role="alert">{{ photoError }}</p>
+        <p v-if="!photos.length" class="filter-help">Belum ada foto.</p><ul v-else class="photo-grid"><li v-for="photo in photos" :key="photo.id"><a :href="apiUrl(`/findings/${row.id}/attachments/${photo.id}`)" target="_blank" rel="noopener"><img :src="apiUrl(`/findings/${row.id}/attachments/${photo.id}`)" :alt="`Foto ${photo.kind.toLowerCase()}: ${photo.originalName}`" loading="lazy" /><span>{{ photo.originalName }}</span></a><small>{{ photo.kind === 'INITIAL' ? 'Awal' : photo.kind === 'COMPLETION' ? 'Penyelesaian' : 'Progres' }} · {{ actor(photo.uploadedBy) }} · {{ timestamp(photo.uploadedAt) }}</small></li></ul>
+        <form v-if="!row.cancelledAt && photos.length < 10" @submit.prevent="savePhoto"><label for="photo-kind">Jenis foto</label><select id="photo-kind" v-model="photoKind" :disabled="photoSaving || photoUncertain"><option value="INITIAL">Kondisi awal</option><option value="PROGRESS">Progres</option><option value="COMPLETION">Penyelesaian</option></select><label for="photo-file">Foto JPEG, PNG atau WebP (maksimal 5 MiB)</label><input id="photo-file" type="file" accept="image/jpeg,image/png,image/webp" required :disabled="photoSaving || photoUncertain" @change="selectPhoto" /><p v-if="photoConflict" class="connection-alert">Versi temuan berubah. Tinjau data terbaru sebelum mengunggah lagi. <button type="button" class="text-button" @click="rebasePhoto">Gunakan versi terbaru</button></p><p v-if="photoUncertain" class="connection-alert">Hasil unggah belum pasti. Coba lagi dengan foto yang sama.</p><button type="submit" class="text-button" :disabled="photoSaving || photoConflict">{{ photoSaving ? 'Mengunggah…' : photoUncertain ? 'Coba unggah kembali' : 'Unggah foto' }}</button></form><p v-else-if="photos.length >= 10" class="filter-help">Batas 10 foto tercapai.</p>
       </section>
       <div class="detail-columns"><FindingHistory :id="row.id" :time-zone="row.timeZone" />
       <section class="panel detail-progress-form"><h2>Perbarui progres</h2><div v-if="conflict" class="connection-alert" role="alert">Data berubah pada server. Tinjau perbedaan sebelum memakai versi terbaru.<p>Dasar draf: versi {{ state.version }} · terbaru: versi {{ row.version }}</p><div v-for="item in conflictFields" :key="item.key" class="conflict-comparison"><strong>{{ item.label }}</strong><span>Semula: {{ item.before }}</span><span>Draf: {{ item.draft }}</span><span>Terbaru: {{ item.latest }}</span></div><p v-if="state.form?.text" class="conflict-draft">Draf catatan: {{ state.form.text }}</p><button type="button" class="text-button" :disabled="row.version <= state.version" @click="rebaseDraft">Gunakan versi terbaru, pertahankan perubahan draf</button><button type="button" class="text-button" @click="discardAndReload">Buang draf dan muat ulang</button></div><div v-if="state.uncertain" class="connection-alert" role="alert">Hasil simpan belum dapat dipastikan. Coba simpan kembali; request yang sama tidak akan menggandakan catatan.</div>

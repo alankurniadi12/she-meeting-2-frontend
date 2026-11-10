@@ -2,7 +2,7 @@
 
 Frontend Vue.js + JavaScript untuk aplikasi internal SHE Meeting.
 
-Status: D0-01 sampai D0-07 selesai untuk demo lokal. Login, dashboard ringkas, daftar rapat dengan pencarian/filter/status/badge/pagination tersedia. Route /login, /dashboard dan /findings memakai Vue Router 4.6.4 yang kompatibel dengan Node 24.10 lokal; / mengarah ke dashboard. Tambah/detail/koreksi/progres temuan tersedia di /findings/new, /findings/:id dan /findings/:id/edit. Grafik/tren dashboard, kelola akun, foto/PDF belum tersedia; pembatalan/pemulihan M-03 tersedia. Belum deployment.
+Status: D0-01 sampai D0-07 selesai untuk demo lokal. Login, dashboard ringkas, daftar rapat dengan pencarian/filter/status/badge/pagination tersedia. Route /login, /dashboard dan /findings memakai Vue Router 4.6.4 yang kompatibel dengan Node 24.10 lokal; / mengarah ke dashboard. Tambah/detail/koreksi/progres temuan tersedia di /findings/new, /findings/:id dan /findings/:id/edit. Grafik/tren dashboard, kelola akun dan PDF belum tersedia; foto M-02 tersedia; pembatalan/pemulihan M-03 tersedia. Belum deployment.
 
 ## Menjalankan
 
@@ -24,7 +24,7 @@ Proxy development meneruskan /api dan /health. Fetch memakai credentials; token 
 
 Dashboard mengambil angka dari GET /api/v1/dashboard, bukan konstanta frontend. Pilih checkbox divisi dan bulan lalu Terapkan filter; tanpa divisi terpilih berarti semua. Bulan hanya memengaruhi indikator periodik, kartu status semua tanggal. Filter sukses tersimpan di query URL dan pulih setelah refresh. Perbarui data memakai scope yang ditampilkan; loading/kosong/galat dibedakan. Dashboard kini di /dashboard. Route lama / mengarah ke dashboard dengan query yang sama. Navigasi router mengembalikan filter melalui Back/Forward/refresh; 401 kembali /login dan login berhasil mengembalikan tujuan internal yang sah. Tujuan eksternal tidak diterima. Deep link Vite lokal diuji; hosting nantinya memerlukan SPA fallback/rewrite, belum dikonfigurasi di Vercel pada tahap ini.
 
-Daftar /findings mengambil baris dan ringkasan dari satu GET /api/v1/findings. Pilih divisi/pencarian/status, buka Filter lanjutan & urutan untuk prioritas, divisi pelapor, dasar/rentang tanggal, pembatalan, sort dan baris per halaman; lalu Terapkan filter. Kartu menghitung seluruh hasil sebelum pagination, data batal terpisah. Perubahan filter mulai page 1, Reset juga menghapus draf belum diterapkan. Tambah temuan dan link Buka detail sekarang berfungsi. Detail menyediakan Koreksi informasi dan form progres; foto/PDF masih belum tersedia.
+Daftar /findings mengambil baris dan ringkasan dari satu GET /api/v1/findings. Pilih divisi/pencarian/status, buka Filter lanjutan & urutan untuk prioritas, divisi pelapor, dasar/rentang tanggal, pembatalan, sort dan baris per halaman; lalu Terapkan filter. Kartu menghitung seluruh hasil sebelum pagination, data batal terpisah. Perubahan filter mulai page 1, Reset juga menghapus draf belum diterapkan. Tambah temuan dan link Buka detail sekarang berfungsi. Detail menyediakan Koreksi informasi dan form progres; PDF masih belum tersedia; foto privat tersedia pada detail.
 
 D0-05: isi form tanpa target/foto bila belum ditentukan, simpan sebagai Diproses, lalu perbarui detail/progres/status. Tertunda wajib alasan; Selesai meminta pemahaman status untuk semua penanggung jawab, tanpa foto/approval. Koreksi dari Selesai ke aktif wajib alasan, kejadian berulang dibuat baru. Riwayat progres dan audit before/after tersedia 10 item per halaman.
 
@@ -54,3 +54,7 @@ D0-07: alur dashboard/filter/create/status/riwayat dua halaman dan konflik dua t
 ## Pembatalan M-03
 
 Pada detail, akun login dapat membatalkan temuan dengan alasan wajib. Data batal tetap dapat dibuka melalui filter Batal, tetapi koreksi/progres hanya dibaca. Admin dapat memulihkan dengan alasan; riwayat menunjukkan kedua aksi dan before/after. Draf alasan dipertahankan saat konflik versi atau hasil jaringan tidak pasti. Validasi lokal: 7 tes frontend, build, 64 tes backend MongoDB dan alur browser dummy batal/pulih. Belum deployment.
+
+## Foto opsional M-02
+
+Detail temuan menyediakan galeri foto privat dan unggah satu foto JPEG/PNG/WebP maksimal 5 MiB pada temuan aktif. Pilih jenis awal/progres/penyelesaian; maksimal 10 foto. Foto hanya dapat dibaca akun login dan tetap tampak saat batal. File yang dipilih/draf retry hanya hidup selama tab terbuka; laporan teks dan status Selesai tetap tanpa foto. Backend menyimpan WebP di folder privat, default `.local/uploads`; belum ada deployment atau uji volume/backup.

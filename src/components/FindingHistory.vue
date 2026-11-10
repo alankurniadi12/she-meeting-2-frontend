@@ -5,9 +5,9 @@ import { fieldLabels } from '../services/field-labels.js';
 const props = defineProps({ id: String, timeZone: String });
 const kind = ref('progress'); const page = ref(1); const rows = ref([]); const meta = ref(null);
 const loading = ref(false); const error = ref('');
-const actions = { CREATED: 'Temuan dicatat', CORRECTED: 'Informasi dikoreksi', PROGRESS_UPDATED: 'Progres diperbarui', CANCELLED: 'Temuan dibatalkan', RESTORED: 'Temuan dipulihkan', DEMO_SEED: 'Fixture data demo' };
+const actions = { CREATED: 'Temuan dicatat', CORRECTED: 'Informasi dikoreksi', PROGRESS_UPDATED: 'Progres diperbarui', CANCELLED: 'Temuan dibatalkan', RESTORED: 'Temuan dipulihkan', ATTACHMENT_ADDED: 'Foto ditambahkan', DEMO_SEED: 'Fixture data demo' };
 const values = { IN_PROGRESS: 'Diproses', ON_HOLD: 'Tertunda', COMPLETED: 'Selesai', LOW: 'Rendah', MEDIUM: 'Sedang', HIGH: 'Tinggi' };
-const fields = computed(() => ({ ...fieldLabels, status: 'Status', holdReason: 'Alasan tertunda', completedAt: 'Waktu selesai', cancelledAt: 'Waktu batal', cancellationReason: 'Alasan pembatalan', cancelledBy: 'Dibatalkan oleh' }));
+const fields = computed(() => ({ ...fieldLabels, status: 'Status', holdReason: 'Alasan tertunda', completedAt: 'Waktu selesai', cancelledAt: 'Waktu batal', cancellationReason: 'Alasan pembatalan', cancelledBy: 'Dibatalkan oleh', attachmentCount: 'Jumlah foto' }));
 const actor = (value) => value?.source === 'DEMO_SEED' ? 'Seed data demo' : value?.displayName ? `Akun ${value.displayName}` : 'Akun tidak tersedia';
 const timestamp = (value) => value ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short', timeZone: props.timeZone || 'Asia/Jakarta' }).format(new Date(value)) : '—';
 function format(value, field, snapshots = []) {

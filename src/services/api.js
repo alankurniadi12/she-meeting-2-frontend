@@ -20,3 +20,18 @@ export async function api(path, { method = 'GET', body } = {}) {
   if (!response.ok) throw Object.assign(new Error(result.error?.message || 'Permintaan gagal. Coba kembali.'), { status: response.status, code: result.error?.code, fields: result.error?.fields, currentVersion: result.error?.currentVersion });
   return result;
 }
+
+export function apiUrl(path) { return `${(import.meta.env.VITE_SERVER_BASE_URL || '').replace(/\/$/, '')}/api/v1${path}`; }
+export async function uploadPhoto(path, fields, file) {
+  const form = new FormData();
+  for (const [name, value] of Object.entries(fields)) form.append(name, String(value));
+  form.append('file', file);
+  let response;
+  try { response = await fetch(apiUrl(path), { method: 'POST', headers: { Accept: 'application/json', 'X-CSRF-Token': csrfToken || '' },
+    credentials: 'include', cache: 'no-store', body: form, signal: AbortSignal.timeout(30000) }); }
+  catch { throw new Error('Hasil unggah belum pasti. Coba lagi dengan foto dan operasi yang sama.'); }
+  let result;
+  try { result = await response.json(); } catch { throw new Error('Hasil unggah belum pasti. Coba lagi dengan foto dan operasi yang sama.'); }
+  if (!response.ok) throw Object.assign(new Error(result.error?.message || 'Unggah gagal.'), { status: response.status, code: result.error?.code, currentVersion: result.error?.currentVersion });
+  return result;
+}

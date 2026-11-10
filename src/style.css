@@ -1145,3 +1145,12 @@ h1 {
 .history-change dd { margin: .15rem 0 0; }
 .history-change dd span:first-child { color: #64748b; }
 .conflict-comparison { display: grid; gap: .2rem; padding: .55rem 0; border-top: 1px solid #cbd5e1; overflow-wrap: anywhere; }
+.detail-photos { margin-top:24px; padding:25px; }
+.detail-photos h2 { font-size:17px; margin-bottom:16px; }
+.detail-photos form { display:grid; gap:10px; max-width:480px; margin-top:22px; }
+.detail-photos form button { justify-self:start; }
+.photo-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:16px; list-style:none; margin:16px 0 0; padding:0; }
+.photo-grid li { min-width:0; }
+.photo-grid a { display:grid; gap:7px; color:inherit; overflow-wrap:anywhere; }
+.photo-grid img { display:block; width:100%; aspect-ratio:4/3; object-fit:cover; border-radius:7px; background:#eef2f7; }
+.photo-grid small { display:block; margin-top:5px; color:#59677a; }
