@@ -2,7 +2,7 @@
 
 Frontend Vue.js + JavaScript untuk aplikasi internal SHE Meeting.
 
-Status: D0-01 sampai D0-07 selesai untuk demo lokal. Login, dashboard ringkas, daftar rapat dengan pencarian/filter/status/badge/pagination tersedia. Route /login, /dashboard dan /findings memakai Vue Router 4.6.4 yang kompatibel dengan Node 24.10 lokal; / mengarah ke dashboard. Tambah/detail/koreksi/progres temuan tersedia di /findings/new, /findings/:id dan /findings/:id/edit. Grafik/tren dashboard, kelola master divisi dan PDF belum tersedia; kelola akun divisi khusus admin tersedia sebagian M-06; foto M-02 tersedia; pembatalan/pemulihan M-03 tersedia. Belum deployment.
+Status: D0-01 sampai D0-07 selesai untuk demo lokal. Login, dashboard ringkas, daftar rapat dengan pencarian/filter/status/badge/pagination tersedia. Route /login, /dashboard dan /findings memakai Vue Router 4.6.4 yang kompatibel dengan Node 24.10 lokal; / mengarah ke dashboard. Tambah/detail/koreksi/progres temuan tersedia di /findings/new, /findings/:id dan /findings/:id/edit. Grafik/tren dashboard, PDF belum tersedia; kelola akun dan master divisi khusus admin tersedia pada M-06; foto M-02 tersedia; pembatalan/pemulihan M-03 tersedia. Belum deployment.
 
 ## Menjalankan
 
@@ -61,4 +61,4 @@ Detail temuan menyediakan galeri foto privat dan unggah satu foto JPEG/PNG/WebP 
 
 ## Admin ICT — M-06 sebagian
 
-Admin ICT melihat menu Kelola akun ke `/admin/accounts`; akun divisi tidak. Halaman ini menampilkan akun, membuat akun DIVISION, mereset sandi, serta aktif/nonaktif. Sandi baru hanya tampil sementara setelah berhasil disimpan; salurkan melalui kanal internal. Server tetap menjaga semua aksi admin. Pengelolaan master divisi dan akun ADMIN sendiri belum ada.
+Admin ICT melihat menu Kelola akun ke `/admin/accounts`; akun divisi tidak. Halaman ini menampilkan akun, membuat akun DIVISION, mereset sandi, serta aktif/nonaktif. Sandi baru hanya tampil sementara setelah berhasil disimpan; salurkan melalui kanal internal. Server tetap menjaga semua aksi admin. Halaman `/admin/divisions` menampilkan, menambah, mengganti nama dan mengaktifkan/nonaktifkan master divisi. Kode tetap; nonaktif perlu menonaktifkan akun divisi terkait dahulu. Akun ADMIN sendiri belum dapat diubah.

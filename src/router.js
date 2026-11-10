@@ -6,6 +6,7 @@ import NotFoundView from './pages/NotFoundView.vue';
 import FindingFormView from './pages/FindingFormView.vue';
 import FindingDetailView from './pages/FindingDetailView.vue';
 import AdminAccountsView from './pages/AdminAccountsView.vue';
+import AdminDivisionsView from './pages/AdminDivisionsView.vue';
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -18,6 +19,7 @@ export const router = createRouter({
     { path: '/findings/:id([a-fA-F0-9]{24})/edit', name: 'finding-edit', component: FindingFormView, meta: { requiresAuth: true } },
     { path: '/findings/:id([a-fA-F0-9]{24})', name: 'finding-detail', component: FindingDetailView, meta: { requiresAuth: true } },
     { path: '/admin/accounts', name: 'admin-accounts', component: AdminAccountsView, meta: { requiresAuth: true, requiresAdmin: true } },
+    { path: '/admin/divisions', name: 'admin-divisions', component: AdminDivisionsView, meta: { requiresAuth: true, requiresAdmin: true } },
     { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundView },
   ],
   scrollBehavior(to, from, saved) { return saved || (to.path !== from.path ? { top: 0 } : false); },

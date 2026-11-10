@@ -11,7 +11,7 @@ export function loginDestination(value) {
   if (typeof value !== 'string') return '/dashboard';
   try {
     const url = new URL(value, window.location.origin);
-    return url.origin === window.location.origin && (['/dashboard', '/findings', '/findings/new', '/admin/accounts'].includes(url.pathname) || /^\/findings\/[a-fA-F0-9]{24}(?:\/edit)?$/.test(url.pathname))
+    return url.origin === window.location.origin && (['/dashboard', '/findings', '/findings/new', '/admin/accounts', '/admin/divisions'].includes(url.pathname) || /^\/findings\/[a-fA-F0-9]{24}(?:\/edit)?$/.test(url.pathname))
       ? `${url.pathname}${url.search}` : '/dashboard';
   } catch { return '/dashboard'; }
 }

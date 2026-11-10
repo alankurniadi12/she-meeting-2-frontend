@@ -80,9 +80,9 @@ async function logout() {
     else message.value = error.message;
   } finally { busy.value = false; }
 }
-const titles = { dashboard: 'Dashboard temuan', findings: 'Daftar temuan', 'finding-new': 'Catat temuan', 'finding-edit': 'Koreksi temuan', 'finding-detail': 'Detail temuan', 'admin-accounts': 'Kelola akun divisi' };
+const titles = { dashboard: 'Dashboard temuan', findings: 'Daftar temuan', 'finding-new': 'Catat temuan', 'finding-edit': 'Koreksi temuan', 'finding-detail': 'Detail temuan', 'admin-accounts': 'Kelola akun divisi', 'admin-divisions': 'Kelola master divisi' };
 const pageTitle = computed(() => !account.value ? 'Masuk ke ruang kerja.' : titles[route.name] || 'Halaman belum tersedia');
-const pageDescription = computed(() => !account.value ? 'Pencatatan dan tindak lanjut kondisi tidak aman untuk rapat lintas divisi.' : route.name === 'admin-accounts' ? 'Kelola akses akun bersama divisi dari satu tempat.' : String(route.name).startsWith('finding') ? 'Catat kondisi dan ikuti tindak lanjut bersama divisi penanggung jawab.' : `Selamat datang, ${account.value.displayName}. Pantau posisi temuan dan fokus tindak lanjut rapat.`);
+const pageDescription = computed(() => !account.value ? 'Pencatatan dan tindak lanjut kondisi tidak aman untuk rapat lintas divisi.' : route.name === 'admin-accounts' ? 'Kelola akses akun bersama divisi dari satu tempat.' : route.name === 'admin-divisions' ? 'Kelola daftar divisi untuk akun dan temuan.' : String(route.name).startsWith('finding') ? 'Catat kondisi dan ikuti tindak lanjut bersama divisi penanggung jawab.' : `Selamat datang, ${account.value.displayName}. Pantau posisi temuan dan fokus tindak lanjut rapat.`);
 watch([() => route.fullPath, checking, account], () => {
   if (checking.value) return;
   if (!account.value && route.meta.requiresAuth) void router.replace({ name: 'login', query: { redirect: route.fullPath } });
@@ -108,6 +108,7 @@ onUnmounted(() => { clearTimeout(expiryTimer); window.removeEventListener('focus
         <RouterLink class="nav-link" active-class="active" to="/dashboard"><span class="nav-icon">▦</span> Dashboard</RouterLink>
         <RouterLink class="nav-link" :class="{ active: String(route.name).startsWith('finding') }" active-class="active" to="/findings"><span class="nav-icon">≡</span> Daftar temuan</RouterLink>
         <RouterLink v-if="account.role === 'ADMIN'" class="nav-link" active-class="active" to="/admin/accounts"><span class="nav-icon">⚙</span> Kelola akun</RouterLink>
+        <RouterLink v-if="account.role === 'ADMIN'" class="nav-link" active-class="active" to="/admin/divisions"><span class="nav-icon">▤</span> Kelola divisi</RouterLink>
       </template>
       <RouterLink v-else class="nav-link" active-class="active" to="/login"><span class="nav-icon">▦</span> Masuk</RouterLink>
       <div class="sidebar-caption next-label">TAHAP BERIKUTNYA</div>
@@ -116,7 +117,7 @@ onUnmounted(() => { clearTimeout(expiryTimer); window.removeEventListener('focus
     </aside>
     <div class="workspace">
       <header class="topbar">
-        <div class="header-left"><button class="menu-button" aria-label="Buka navigasi" :aria-expanded="menuOpen" @click="menuOpen = !menuOpen">☰</button><RouterLink to="/dashboard">Home</RouterLink><span class="breadcrumb-slash">/</span><span>{{ account ? (route.name === 'admin-accounts' ? 'Kelola akun' : String(route.name).startsWith('finding') ? 'Daftar temuan' : 'Dashboard') : 'Masuk' }}</span></div>
+        <div class="header-left"><button class="menu-button" aria-label="Buka navigasi" :aria-expanded="menuOpen" @click="menuOpen = !menuOpen">☰</button><RouterLink to="/dashboard">Home</RouterLink><span class="breadcrumb-slash">/</span><span>{{ account ? (route.name === 'admin-accounts' ? 'Kelola akun' : route.name === 'admin-divisions' ? 'Kelola divisi' : String(route.name).startsWith('finding') ? 'Daftar temuan' : 'Dashboard') : 'Masuk' }}</span></div>
         <div class="header-right"><span class="environment-tag">DEMO DUMMY</span><div class="account-state"><span class="avatar">{{ account?.displayName?.slice(0, 1) || 'S' }}</span><div><strong>{{ account?.displayName || 'Belum login' }}</strong><small>{{ account ? (account.role === 'ADMIN' ? 'Administrator' : 'Akun bersama divisi') : 'Akses internal' }}</small></div></div><button v-if="account" class="logout-button" :disabled="busy" @click="logout">{{ busy ? 'Memproses…' : 'Keluar' }}</button></div>
       </header>
       <main>
