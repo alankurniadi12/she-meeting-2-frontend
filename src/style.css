@@ -1154,3 +1154,17 @@ h1 {
 .photo-grid a { display:grid; gap:7px; color:inherit; overflow-wrap:anywhere; }
 .photo-grid img { display:block; width:100%; aspect-ratio:4/3; object-fit:cover; border-radius:7px; background:#eef2f7; }
 .photo-grid small { display:block; margin-top:5px; color:#59677a; }
+.admin-accounts { display:grid; gap:22px; }
+.admin-account-list,.admin-account-form { padding:24px; }
+.admin-panel-heading { display:flex; justify-content:space-between; align-items:center; gap:15px; }
+.admin-accounts h2 { font-size:18px; margin:0 0 12px; }
+.admin-account-rows { list-style:none; padding:0; margin:18px 0; }
+.admin-account-rows li { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:13px 0; border-top:1px solid #e2e8f0; }
+.admin-account-rows small { display:block; margin-top:5px; color:#59677a; }
+.admin-row-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.admin-account-form form,.admin-account-form fieldset { display:grid; gap:11px; max-width:520px; }
+.admin-account-form fieldset { border:0; padding:0; margin:0; }
+.admin-account-form input,.admin-account-form select { width:100%; min-width:0; }
+.admin-account-form button { justify-self:start; }
+.admin-accounts code { overflow-wrap:anywhere; }
+@media(max-width:650px) { .admin-account-rows li { align-items:flex-start; flex-direction:column; } }

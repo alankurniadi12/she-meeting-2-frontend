@@ -2,7 +2,7 @@
 
 Frontend Vue.js + JavaScript untuk aplikasi internal SHE Meeting.
 
-Status: D0-01 sampai D0-07 selesai untuk demo lokal. Login, dashboard ringkas, daftar rapat dengan pencarian/filter/status/badge/pagination tersedia. Route /login, /dashboard dan /findings memakai Vue Router 4.6.4 yang kompatibel dengan Node 24.10 lokal; / mengarah ke dashboard. Tambah/detail/koreksi/progres temuan tersedia di /findings/new, /findings/:id dan /findings/:id/edit. Grafik/tren dashboard, kelola akun dan PDF belum tersedia; foto M-02 tersedia; pembatalan/pemulihan M-03 tersedia. Belum deployment.
+Status: D0-01 sampai D0-07 selesai untuk demo lokal. Login, dashboard ringkas, daftar rapat dengan pencarian/filter/status/badge/pagination tersedia. Route /login, /dashboard dan /findings memakai Vue Router 4.6.4 yang kompatibel dengan Node 24.10 lokal; / mengarah ke dashboard. Tambah/detail/koreksi/progres temuan tersedia di /findings/new, /findings/:id dan /findings/:id/edit. Grafik/tren dashboard, kelola master divisi dan PDF belum tersedia; kelola akun divisi khusus admin tersedia sebagian M-06; foto M-02 tersedia; pembatalan/pemulihan M-03 tersedia. Belum deployment.
 
 ## Menjalankan
 
@@ -58,3 +58,7 @@ Pada detail, akun login dapat membatalkan temuan dengan alasan wajib. Data batal
 ## Foto opsional M-02
 
 Detail temuan menyediakan galeri foto privat dan unggah satu foto JPEG/PNG/WebP maksimal 5 MiB pada temuan aktif. Pilih jenis awal/progres/penyelesaian; maksimal 10 foto. Foto hanya dapat dibaca akun login dan tetap tampak saat batal. File yang dipilih/draf retry hanya hidup selama tab terbuka; laporan teks dan status Selesai tetap tanpa foto. Backend menyimpan WebP di folder privat, default `.local/uploads`; belum ada deployment atau uji volume/backup.
+
+## Admin ICT — M-06 sebagian
+
+Admin ICT melihat menu Kelola akun ke `/admin/accounts`; akun divisi tidak. Halaman ini menampilkan akun, membuat akun DIVISION, mereset sandi, serta aktif/nonaktif. Sandi baru hanya tampil sementara setelah berhasil disimpan; salurkan melalui kanal internal. Server tetap menjaga semua aksi admin. Pengelolaan master divisi dan akun ADMIN sendiri belum ada.

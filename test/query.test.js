@@ -13,6 +13,7 @@ test('tujuan setelah login hanya menerima halaman internal yang diimplementasika
   assert.equal(loginDestination('/findings?q=panel&page=2'), '/findings?q=panel&page=2');
   assert.equal(loginDestination('/dashboard?month=2026-11'), '/dashboard?month=2026-11');
   assert.equal(loginDestination('/findings/new'), '/findings/new');
+  assert.equal(loginDestination('/admin/accounts'), '/admin/accounts');
   assert.equal(loginDestination('/findings/abcdef123456789012345678/edit'), '/findings/abcdef123456789012345678/edit');
   assert.equal(findingReturnPath('/findings?q=panel&page=2'), '/findings?q=panel&page=2');
   assert.equal(findingReturnPath('https://untrusted.invalid/findings'), '/findings');
