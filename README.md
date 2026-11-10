@@ -2,7 +2,7 @@
 
 Frontend Vue.js + JavaScript untuk aplikasi internal SHE Meeting.
 
-Status: D0-01 sampai D0-07 selesai untuk demo lokal. Login, dashboard ringkas, daftar rapat dengan pencarian/filter/status/badge/pagination tersedia. Route /login, /dashboard dan /findings memakai Vue Router 4.6.4 yang kompatibel dengan Node 24.10 lokal; / mengarah ke dashboard. Tambah/detail/koreksi/progres temuan tersedia di /findings/new, /findings/:id dan /findings/:id/edit. Grafik/tren dashboard, PDF belum tersedia; kelola akun dan master divisi khusus admin tersedia pada M-06; foto M-02 tersedia; pembatalan/pemulihan M-03 tersedia. Belum deployment.
+Status: D0-01 sampai D0-07, M-02, M-03, M-04 dan M-06 selesai untuk demo lokal. Login, dashboard lengkap dengan tren/status per divisi/lima tindak lanjut, serta daftar rapat dengan pencarian/filter/status/badge/pagination tersedia. Route /login, /dashboard dan /findings memakai Vue Router 4.6.4 yang kompatibel dengan Node 24.10 lokal; / mengarah ke dashboard. Tambah/detail/koreksi/progres temuan tersedia di /findings/new, /findings/:id dan /findings/:id/edit. PDF M-05 belum tersedia; kelola akun dan master divisi khusus admin tersedia. Belum deployment.
 
 ## Menjalankan
 
@@ -30,7 +30,7 @@ D0-05: isi form tanpa target/foto bila belum ditentukan, simpan sebagai Diproses
 
 Draft hanya memori tab per akun/resource, tidak localStorage. Konflik menjaga draft, menampilkan nilai semula/draft/terbaru, lalu rebase manual atau buang draft secara eksplisit. Network/5xx tidak pasti mengunci isian untuk retry mutationId/payload yang sama. Navigasi dicegah saat menyimpan; refresh/menutup tab dapat menghapus draft dan diberi peringatan. Setelah sukses, detail dibaca ulang dan draft dibersihkan. Notice sukses tidak berasal dari URL. Belum pemulihan tahan refresh/offline atau merge otomatis perubahan pada field yang sama.
 
-Validasi D0-05: 5 tes frontend (URL/tujuan login, cache draft/retry dan notice), build, serta 62 tes backend MongoDB nyata lulus. Browser membuat temuan tanpa target/foto, koreksi, tunda/lanjut/Selesai, refresh, konflik dua tab tanpa hilang teks draft, native validasi alasan dan form/detail HP 390px serta desktop 1440px diperiksa. Daftar terfilter membaca hasil baru. M-04 serta bagian MVP lain belum seluruhnya selesai.
+Validasi D0-05: 5 tes frontend (URL/tujuan login, cache draft/retry dan notice), build, serta 62 tes backend MongoDB nyata lulus. Browser membuat temuan tanpa target/foto, koreksi, tunda/lanjut/Selesai, refresh, konflik dua tab tanpa hilang teks draft, native validasi alasan dan form/detail HP 390px serta desktop 1440px diperiksa. Daftar terfilter membaca hasil baru. M-04 kemudian diuji terpisah dengan 67 tes backend, 7 frontend/build dan filter dashboard Chrome lokal; bagian MVP lain belum seluruhnya selesai.
 
 Output dist/ diabaikan Git. Vercel nantinya memakai root repo ini, npm run build dan dist; konfigurasi hosting belum diterapkan.
 
